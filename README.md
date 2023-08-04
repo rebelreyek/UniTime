@@ -1,2 +1,3 @@
 # UniTime
-student involvement tracker for frc2399 The Fighting Unicorns - this is NOT the purdue scheduling software
+Student involvement tracker for FRC2399 The Fighting Unicorns 
+_this is NOT the purdue scheduling software_
