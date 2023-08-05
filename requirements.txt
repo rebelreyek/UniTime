@@ -1,5 +1,10 @@
 flask
 python-dotenv
+
+Django
+django-allauth
+
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
+requests
