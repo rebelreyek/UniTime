@@ -1,8 +1,10 @@
-from flask import Flask, redirect, url_for, request, render_template, session
+from flask import Flask
 
 app = Flask(__name__)
 
-# root path
-@app.route('/', methods=['GET'])
-def index():
-    return render_template('index.html')
+@app.route('/')
+def hello():
+    return "Hello, this is your Python web app!"
+
+if __name__ == '__main__':
+    app.run(debug=True)
