@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Sheet Web App</title>
+</head>
+<body>
+    <h1>Google Sheet Data</h1>
+    <table>
+        {% for row in values %}
+        <tr>
+            {% for cell in row %}
+            <td>{{ cell }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
