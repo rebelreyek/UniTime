@@ -329,7 +329,7 @@ if __name__ == "__main__":
 
     # get workbook tabs
     G_sheet_roster = G_workbook.worksheet("Roster")
-    G_sheet_timelog = G_workbook.worksheet("TimeLog")
+    G_sheet_timelog = G_workbook.worksheet("TimeLog_build")
 
     # roster memory structure
     G_roster = {}
