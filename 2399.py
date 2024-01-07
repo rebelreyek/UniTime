@@ -134,184 +134,186 @@ def app_post_loop(who, clock):
     clockcolor = 'blue'
 
     while True:
+        try:
+            # loop runs on a 1 second interval to maintain the clockout timers
+            time.sleep(1)
 
-        # loop runs on a 1 second interval to maintain the clockout timers
-        time.sleep(1)
+            # update on screen clock
+            curtime = datetime.datetime.now().strftime('%H:%M:%S')
+            clock.config(text=curtime)
 
-        # update on screen clock
-        curtime = datetime.datetime.now().strftime('%H:%M:%S')
-        clock.config(text=curtime)
+            # do smspoll
+            smspoll = smspoll + 1
+            if smspoll == 5:
+                smspoll = 0
 
-        # do smspoll
-        smspoll = smspoll + 1
-        if smspoll == 5:
-            smspoll = 0
+                print(curtime + " : Processing sms")
 
-            print(curtime + " : Processing sms")
+                # loop through all rows that are pending sms
+                try:
+                    cells = G_sheet_timelog.findall(re.compile('_sms'), in_column=1)
+                except:
+                    cells = None
 
-            # loop through all rows that are pending sms
-            try:
-                cells = G_sheet_timelog.findall(re.compile('_sms'), in_column=1)
-            except:
-                cells = None
+                for cell in cells:
 
-            for cell in cells:
+                    # extract user id for this row
+                    match = re.search('(.*)_', cell.value)
+                    user_id = match.group(1)
 
-                # extract user id for this row
-                match = re.search('(.*)_', cell.value)
-                user_id = match.group(1)
+                    # if row is past sms time collection window, close it to complete it
+                    if (datetime.datetime.now() - datetime.datetime.strptime(G_sheet_timelog.cell(cell.row, 3).value, timeformat)).total_seconds() >= sms_timeout():
+                        try:
+                            sts = G_sheet_timelog.update("A" + str(cell.row), user_id)
+                        except:
+                            pass
 
-                # if row is past sms time collection window, close it to complete it
-                if (datetime.datetime.now() - datetime.datetime.strptime(G_sheet_timelog.cell(cell.row, 3).value, timeformat)).total_seconds() >= sms_timeout():
+                        continue
+
+                    # find user's cell number
+                    user_cell = ""
+                    for member in G_roster:
+                        if user_id == member["HBID"]:
+                            user_cell = member["StudentCell"]
+                            break
+
+                    # user cell number found, so poll it for inbound sms
+                    if user_cell != "":
+                        d = {'remote' : user_cell}
+                        srow = str(cell.row)
+                        rsp = requests.post("https://1.terazero.com/smsread", headers={'Content-Type': 'application/json'}, data=json.dumps(d))
+                        jd = json.loads(rsp.text)
+                        if "text" in jd:
+                            if srow not in sms:
+                                sms[srow] = jd["text"]
+                            else:
+                                sms[srow] = sms[srow] + jd["text"]
+
+                        # attempt to update google sheet with sms
+                        try:
+                            cursms = G_sheet_timelog.acell("D" + srow).value
+                            if cursms == None:
+                                cursms = sms[srow]
+                            else:
+                                cursms = cursms + sms[srow]
+                            G_sheet_timelog.update("D" + srow, cursms)
+                            del sms[srow]
+                        except:
+                            pass
+
+            # don't do anything if no outstanding events
+            if len(list(G_events)) == 0 and len(list(G_roster)) != 0:
+                who.place_forget()
+
+                clock.config(fg=clockcolor, font='Arial 56 bold')
+                clock.place(x=clockx, y=clocky)
+                colorchange = False
+
+                tx = G_win.winfo_width()
+                if clockx + clockdx < 0 or clockx + clockdx > tx - clock.winfo_width():
+                    clockdx *= -1
+                    colorchange = True
+                clockx = clockx + clockdx
+
+                ty = G_win.winfo_height()
+                if clocky + clockdy < 0 or clocky + clockdy > ty - clock.winfo_height():
+                    clockdy *= -1
+                    colorchange = True
+                clocky = clocky + clockdy
+
+                if colorchange == True:
+                    if clockcolor == 'blue':
+                        clockcolor = 'red'
+                    else:
+                        clockcolor = 'blue'                
+
+                continue
+            else:
+                who.place(x=5, y=5)
+                clock.config(fg='yellow', font='Arial 24 bold')
+                clock.place(x=G_win.winfo_width() - clock.winfo_width(), y=1)
+                pass
+
+            # roster is reloaded every 10 minutes when there are open events
+            rosterreload = rosterreload + 1
+            if rosterreload == 600 or len(list(G_roster)) == 0:
+                print(curtime + " : roster reload")
+                rosterreload = 0
+                with roster_lock:
                     try:
-                        sts = G_sheet_timelog.update("A" + str(cell.row), user_id)
+                        # pull roster in two steps in case google rate limits
+                        roster_tmp = G_sheet_roster.get_all_records()
+                        G_roster = roster_tmp
                     except:
                         pass
 
-                    continue
+                    # fixup numerics to strings for later comparisons
+                    for member in G_roster:
+                        member["HBID"] = str(member["HBID"])
+                        member["StudentCell"] = str(member["StudentCell"])
+                        member["ParentCell"] = str(member["ParentCell"])
 
-                # find user's cell number
+            # loop to process clock events
+            for e in list(G_events):
+
+                # find user belonging to this event
+                user_id = ""
+                user_first = ""
                 user_cell = ""
-                for member in G_roster:
-                    if user_id == member["HBID"]:
-                        user_cell = member["StudentCell"]
+                for lp in range(0, len(G_roster)):
+                    if e == G_roster[lp]['HBID']:
+                        user_id = e
+                        user_first = G_roster[lp]["StudentFirst"].strip()
+                        user_cell = G_roster[lp]["StudentCell"].strip()
                         break
 
-                # user cell number found, so poll it for inbound sms
-                if user_cell != "":
-                    d = {'remote' : user_cell}
-                    srow = str(cell.row)
-                    rsp = requests.post("https://1.terazero.com/smsread", headers={'Content-Type': 'application/json'}, data=json.dumps(d))
-                    jd = json.loads(rsp.text)
-                    if "text" in jd:
-                        if srow not in sms:
-                             sms[srow] = jd["text"]
-                        else:
-                            sms[srow] = sms[srow] + jd["text"]
+                # not a valid user, so dump event
+                if user_id == "":
+                    del G_events[e]
+                    continue
 
-                    # attempt to update google sheet with sms
+                # process new clock in event
+                if "ClockIn" in G_events[e] and not "_clockout" in G_events[e]:
+                    print(curtime + " : new clock in")
+                    # update or add pending row to time log (this may fail due to google rate limiting, so it will keep retrying each cycle)
                     try:
-                        cursms = G_sheet_timelog.acell("D" + srow).value
-                        if cursms == None:
-                            cursms = sms[srow]
+                        row = [user_id + "_clockout", G_events[e]["ClockIn"], "", ""]
+                        cell = G_sheet_timelog.find(user_id + "_clockout")
+                        if cell:
+                            srow = str(cell.row)
+                            sts = G_sheet_timelog.update("A" + srow + ":D" + srow, [row])
                         else:
-                            cursms = cursms + sms[srow]
-                        G_sheet_timelog.update("D" + srow, cursms)
-                        del sms[srow]
+                            sts = G_sheet_timelog.append_row(row)
+                        G_events[e]["_clockout"] = True
                     except:
                         pass
 
-        # don't do anything if no outstanding events
-        if len(list(G_events)) == 0 and len(list(G_roster)) != 0:
-            who.place_forget()
+                # process new clock out event
+                if "ClockOut" in G_events[e]:
+                    print(curtime + " : new clock out")
 
-            clock.config(fg=clockcolor, font='Arial 56 bold')
-            clock.place(x=clockx, y=clocky)
-            colorchange = False
-
-            tx = G_win.winfo_width()
-            if clockx + clockdx < 0 or clockx + clockdx > tx - clock.winfo_width():
-                clockdx *= -1
-                colorchange = True
-            clockx = clockx + clockdx
-
-            ty = G_win.winfo_height()
-            if clocky + clockdy < 0 or clocky + clockdy > ty - clock.winfo_height():
-                clockdy *= -1
-                colorchange = True
-            clocky = clocky + clockdy
-
-            if colorchange == True:
-                if clockcolor == 'blue':
-                    clockcolor = 'red'
-                else:
-                    clockcolor = 'blue'                
-
-            continue
-        else:
-            who.place(x=5, y=5)
-            clock.config(fg='yellow', font='Arial 24 bold')
-            clock.place(x=G_win.winfo_width() - clock.winfo_width(), y=1)
-            pass
-
-        # roster is reloaded every 10 minutes when there are open events
-        rosterreload = rosterreload + 1
-        if rosterreload == 600 or len(list(G_roster)) == 0:
-            print(curtime + " : roster reload")
-            rosterreload = 0
-            with roster_lock:
-                try:
-                    # pull roster in two steps in case google rate limits
-                    roster_tmp = G_sheet_roster.get_all_records()
-                    G_roster = roster_tmp
-                except:
-                    pass
-
-                # fixup numerics to strings for later comparisons
-                for member in G_roster:
-                    member["HBID"] = str(member["HBID"])
-                    member["StudentCell"] = str(member["StudentCell"])
-                    member["ParentCell"] = str(member["ParentCell"])
-
-        # loop to process clock events
-        for e in list(G_events):
-
-            # find user belonging to this event
-            user_id = ""
-            user_first = ""
-            user_cell = ""
-            for lp in range(0, len(G_roster)):
-                if e == G_roster[lp]['HBID']:
-                    user_id = e
-                    user_first = G_roster[lp]["StudentFirst"].strip()
-                    user_cell = G_roster[lp]["StudentCell"].strip()
-                    break
-
-            # not a valid user, so dump event
-            if user_id == "":
-                del G_events[e]
-                continue
-
-            # process new clock in event
-            if "ClockIn" in G_events[e] and not "_clockout" in G_events[e]:
-                print(curtime + " : new clock in")
-                # update or add pending row to time log (this may fail due to google rate limiting, so it will keep retrying each cycle)
-                try:
-                    row = [user_id + "_clockout", G_events[e]["ClockIn"], "", ""]
+                    # send reminder text to the user to enter their notes
+                    if user_cell != "" and not "sms_sent" in G_events[e]:
+                        try:
+                            d1 = datetime.datetime.strptime(G_events[e]["ClockIn"], timeformat)
+                            d2 = datetime.datetime.strptime(G_events[e]["ClockOut"], timeformat)
+                            diff = str(datetime.timedelta(seconds=(d2 - d1).total_seconds() + 60))
+                            tmsg = "Hi " + user_first + ", reply with how you spent your " + diff[:-3] + " today at robotics."
+                            d = {"remote" : user_cell, "text" : tmsg}
+                            rsp = requests.post("https://1.terazero.com/smssend", headers={'Content-Type': 'application/json'}, data=json.dumps(d))
+                            G_events[e]["sms_sent"] = True
+                        except:
+                            pass
+                    
+                    # update pending row in time log (this may fail due to google rate limiting, so it will keep retrying each cycle)
                     cell = G_sheet_timelog.find(user_id + "_clockout")
                     if cell:
+                        row = [user_id + "_sms", G_events[e]["ClockIn"], G_events[e]["ClockOut"], ""]
                         srow = str(cell.row)
                         sts = G_sheet_timelog.update("A" + srow + ":D" + srow, [row])
-                    else:
-                        sts = G_sheet_timelog.append_row(row)
-                    G_events[e]["_clockout"] = True
-                except:
-                    pass
-
-            # process new clock out event
-            if "ClockOut" in G_events[e]:
-                print(curtime + " : new clock out")
-
-                # send reminder text to the user to enter their notes
-                if user_cell != "" and not "sms_sent" in G_events[e]:
-                    try:
-                        d1 = datetime.datetime.strptime(G_events[e]["ClockIn"], timeformat)
-                        d2 = datetime.datetime.strptime(G_events[e]["ClockOut"], timeformat)
-                        diff = str(datetime.timedelta(seconds=(d2 - d1).total_seconds() + 60))
-                        tmsg = "Hi " + user_first + ", reply with how you spent your " + diff[:-3] + " today at robotics."
-                        d = {"remote" : user_cell, "text" : tmsg}
-                        rsp = requests.post("https://1.terazero.com/smssend", headers={'Content-Type': 'application/json'}, data=json.dumps(d))
-                        G_events[e]["sms_sent"] = True
-                    except:
-                        pass
-                
-                # update pending row in time log (this may fail due to google rate limiting, so it will keep retrying each cycle)
-                cell = G_sheet_timelog.find(user_id + "_clockout")
-                if cell:
-                    row = [user_id + "_sms", G_events[e]["ClockIn"], G_events[e]["ClockOut"], ""]
-                    srow = str(cell.row)
-                    sts = G_sheet_timelog.update("A" + srow + ":D" + srow, [row])
-                del G_events[e]
+                    del G_events[e]
+        except:
+            continue
 
 
 if __name__ == "__main__":
