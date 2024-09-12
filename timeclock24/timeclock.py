@@ -48,7 +48,7 @@ if __name__ == "__main__":
         print('no display found. Using :0.0')
         os.environ.__setitem__('DISPLAY', ':0.0')
 
-    mypath = "/home/pi/timeclock/"
+    mypath = "/Documents/GitHub/Unitime/timeclock/"
 
     timeformat = "%Y-%m-%d %H:%M:%S"
     key_queue = queue.Queue()
