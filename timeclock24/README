@@ -1,0 +1,6 @@
+timeclock.py	tkinter/python code for barcode scanned time entry
+		(started at boot by cron)
+
+logpost.py	posts log files to google sheets
+		(run once a day by cron)
+

@@ -327,11 +327,11 @@ if __name__ == "__main__":
     client = gspread.authorize(creds)
 
     # open workbook
-    G_workbook = client.open("StudentAttendance2324")
+    G_workbook = client.open("StudentAttendance2425")
 
     # get workbook tabs
     G_sheet_roster = G_workbook.worksheet("Roster")
-    G_sheet_timelog = G_workbook.worksheet("TimeLog_build")
+    G_sheet_timelog = G_workbook.worksheet("Preseason")
 
     # roster memory structure
     G_roster = {}
