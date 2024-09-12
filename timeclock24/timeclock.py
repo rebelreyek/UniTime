@@ -48,8 +48,6 @@ if __name__ == "__main__":
         print('no display found. Using :0.0')
         os.environ.__setitem__('DISPLAY', ':0.0')
 
-    mypath = "/Documents/GitHub/Unitime/timeclock/"
-
     timeformat = "%Y-%m-%d %H:%M:%S"
     key_queue = queue.Queue()
 
@@ -61,7 +59,7 @@ if __name__ == "__main__":
 
     # set our credentials to access google docs
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name(mypath + '2399_secret.json', scope)
+    creds = ServiceAccountCredentials.from_json_keyfile_name('2399_secret.json', scope)
     client = gspread.authorize(creds)
 
     # open workbook
@@ -76,7 +74,7 @@ if __name__ == "__main__":
 
     # try loading from local json
     try:
-        f = open(mypath + "roster.json", "r")
+        f = open("roster.json", "r")
         G_roster = json.load(f)
         f.close()
         print("Roster loaded from local file roster.json.  Delete to load from google.")
@@ -99,7 +97,7 @@ if __name__ == "__main__":
     G_main.bind("<KeyPress>", keydown)
     clock = Label(G_main, text="00:00:00", bg="black", anchor='w')
     who = Label(G_main, text="Who's here today", fg="SteelBlue1", bg="black", font='Arial 20 bold', anchor='w')
-    image = PhotoImage(file = mypath + "2399.jpg")
+    image = PhotoImage(file = "2399.jpg")
     imagelab = Label(G_main, image=image, borderwidth=0)
 
     G_win = Toplevel(G_main)
@@ -221,14 +219,14 @@ if __name__ == "__main__":
                         G_member["ClockOut"] = datetime.datetime.now().strftime(timeformat)
                         delta = datetime.datetime.strptime(G_member["ClockOut"], timeformat) - datetime.datetime.strptime(G_member["ClockIn"], timeformat)
                         l = G_member["BarcodeID"] + "\t" + G_member["StudentFirst"] + "\t" + G_member["ClockIn"] + "\t" + G_member["ClockOut"] + "\t" + str(delta.total_seconds()) + "\r\n"
-                        f = open(mypath + "logs/{d.year}{d.month:02}{d.day:02}.log".format(d=datetime.datetime.now()), "a")
+                        f = open("logs/{d.year}{d.month:02}{d.day:02}.log".format(d=datetime.datetime.now()), "a")
                         f.write(l)
                         f.close()
                         child['fg'] = "gray20"
                         print(G_member["ClockOut"] + " CLOCK OUT: " + G_member["StudentFirst"])
                         del G_member["ClockIn"]
                         del G_member["ClockOut"]
-                    f = open(mypath + "roster.json", "w")
+                    f = open("roster.json", "w")
                     f.write(json.dumps(G_roster, indent=4))
                     f.close()
 
