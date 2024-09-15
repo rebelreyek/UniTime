@@ -1,4 +1,7 @@
 secret.json
 G_team.json
-695.py
-Dockerfile
+2399_secret.json
+roster.json
+# exception to the rule
+/timeclock24/logs/*
+!/timeclock24/logs/.gitkeep
