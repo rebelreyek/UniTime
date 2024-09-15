@@ -20,8 +20,8 @@ import datetime
 
 if __name__ == "__main__":
 
-    mypath = "/home/pi/timeclock/"
-    logfiles = mypath + "logs/"
+    mypath = "C:/Users/Owner/Documents/GitHub/UniTime/timeclock24/"
+    logfiles = mypath + "/logs/"
 
     # set our credentials to access google docs
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -29,10 +29,10 @@ if __name__ == "__main__":
     client = gspread.authorize(creds)
 
     # open workbook
-    G_workbook = client.open("Roster")
+    G_workbook = client.open("StudentAttendance2425")
 
     # get workbook timelog tab
-    G_sheet_timelog = G_workbook.worksheet("Preseason")
+    G_sheet_timelog = G_workbook.worksheet("PreSeason")
 
     # loop to upload any log files
     # files are deleted if uploaded successfully
