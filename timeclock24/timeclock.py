@@ -3,6 +3,7 @@ import requests
 import urllib
 import json
 import re
+import math
 
 # imports needed for google docs
 import gspread
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     clockdx = 6
     clocky = 1
     clockdy = 2
-    clockcolor = 'blue'
+    clockcolor = 'dodgerblue'
 
     # set our credentials to access google docs
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -82,13 +83,13 @@ if __name__ == "__main__":
         G_roster = G_sheet_roster.get_all_records()
         print("Local file roster.json not found.  Roster loaded from google.")
 
-        # # fixup numerics to strings for later comparisons
-        # for member in G_roster:
-        #     member["BarcodeID"] = str(member["BarcodeID"])
+        # fixup numerics to strings for later comparisons
+        for member in G_roster:
+            member["HBID"] = str(member["HBID"])
         #     member["StudentCell"] = str(member["StudentCell"])
         #     member["ParentCell"] = str(member["ParentCell"])
 
-    rows, cols = (8, 6)
+    rows, cols = (7, 7)
     arr = rows * [[0] * cols]
 
     G_main = Tk()
@@ -96,35 +97,35 @@ if __name__ == "__main__":
     G_main.attributes("-fullscreen", True)
     G_main.bind("<KeyPress>", keydown)
     clock = Label(G_main, text="00:00:00", bg="black", anchor='w')
-    who = Label(G_main, text="Who's here today", fg="SteelBlue1", bg="black", font='Arial 20 bold', anchor='w')
-    image = PhotoImage(file = "2399.jpg")
+    who = Label(G_main, text="Who's here today", fg="SteelBlue1", bg="black", font='Arial 40 bold', anchor='w')
+    image = PhotoImage(file = "2399.png")
     imagelab = Label(G_main, image=image, borderwidth=0)
 
     G_win = Toplevel(G_main)
-    # G_win.geometry("720x98") # pi screen is 800x480
-    G_win.configure(cursor="none", background="tan4")
+    G_win.geometry("1366x768") # pi screen is 800x480, 2399-ds is 1366x768
+    G_win.configure(cursor="none", background="black")
     G_win.transient(G_main)
     G_win.overrideredirect(1)
 
-    for r in range(0, 3):
-        for c in range(0,16):
+    for r in range(0, 7):
+        for c in range(0,7):
             mtxt = ""
             for member in G_roster:
                 if member["grow"] == r + 1 and member["gcol"] == c + 1:
                     mtxt = member["StudentFirst"]
                     #mtxt = member["StudentFirst"][0] + member["StudentLast"][0]
                     if "ClockIn" in member:
-                        fgcolor = "pink"
+                        fgcolor = "mediumvioletred"
                     else:
-                        fgcolor = "gray20"
+                        fgcolor = "lightgrey"
             Label(G_win,
             text = mtxt,
-            font = ("Arial", 8, "bold"),
+            font = ("Arial", 20, "bold"),
             fg = fgcolor,
-            bg = "black",
+            bg = "lavenderblush",
             justify = "center",
-            width = 7,
-            height = 2).grid(row = r, column = c, sticky = W, padx = 1, pady = 1)
+            width = 10,
+            height = 2).grid(row = r, column = c, sticky = W, padx = 2, pady = 2)
 
     # main program loop
     user_id = ""
@@ -194,7 +195,7 @@ if __name__ == "__main__":
         # confirm valid user 
         user_found = False
         for member in G_roster:
-            if member["BarcodeID"] == user_id:
+            if member["HBID"] == user_id:
                 user_found = True
                 G_member = member
                 grow = member["grow"]
@@ -213,16 +214,22 @@ if __name__ == "__main__":
                 if r == grow and c == gcol:
                     if "ClockIn" not in G_member:
                         G_member["ClockIn"] = datetime.datetime.now().strftime(timeformat)
-                        child['fg'] = "pink"
+                        child['fg'] = "mediumvioletred"
                         print(G_member["ClockIn"] + " CLOCK IN:  " + G_member["StudentFirst"])
                     else:
+                        # calculate total time spent at robotics
                         G_member["ClockOut"] = datetime.datetime.now().strftime(timeformat)
                         delta = datetime.datetime.strptime(G_member["ClockOut"], timeformat) - datetime.datetime.strptime(G_member["ClockIn"], timeformat)
-                        l = G_member["BarcodeID"] + "\t" + G_member["StudentFirst"] + "\t" + G_member["ClockIn"] + "\t" + G_member["ClockOut"] + "\t" + str(delta.total_seconds()) + "\r\n"
+                        delta = delta.total_seconds() / 60.0
+
+                        # round to the upper 5 minutes
+                        delta = int(math.ceil(delta / 5.0)) * 5
+
+                        l = G_member["HBID"] + "\t" + G_member["StudentFirst"] + "\t" + G_member["ClockIn"] + "\t" + G_member["ClockOut"] + "\t" + str(delta) + "\r"
                         f = open("logs/{d.year}{d.month:02}{d.day:02}.log".format(d=datetime.datetime.now()), "a")
                         f.write(l)
                         f.close()
-                        child['fg'] = "gray20"
+                        child['fg'] = "lightgrey"
                         print(G_member["ClockOut"] + " CLOCK OUT: " + G_member["StudentFirst"])
                         del G_member["ClockIn"]
                         del G_member["ClockOut"]
