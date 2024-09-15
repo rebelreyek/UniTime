@@ -236,4 +236,3 @@ if __name__ == "__main__":
                     f = open("roster.json", "w")
                     f.write(json.dumps(G_roster, indent=4))
                     f.close()
-
