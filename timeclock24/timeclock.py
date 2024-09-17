@@ -225,6 +225,10 @@ if __name__ == "__main__":
                         # round to the upper 5 minutes
                         delta = int(math.ceil(delta / 5.0)) * 5
 
+                        # write logs longer than 12hrs or shorter than 5min as 0
+                        if delta <= 5 or delta > 720:
+                            delta = 0
+
                         l = G_member["HBID"] + "\t" + G_member["StudentFirst"] + "\t" + G_member["ClockIn"] + "\t" + G_member["ClockOut"] + "\t" + str(delta) + "\r"
                         f = open("logs/{d.year}{d.month:02}{d.day:02}.log".format(d=datetime.datetime.now()), "a")
                         f.write(l)
