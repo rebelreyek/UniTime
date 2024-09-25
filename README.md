@@ -2,5 +2,5 @@
 Student involvement tracker for FRC2399 The Fighting Unicorns 
 (_this is NOT the purdue scheduling software_)
 
-- 2399.py tracks hours in the shop
-- app.py displays student progress
+- timeclock24 tracks hours in the shop
+- student-app displays student progress

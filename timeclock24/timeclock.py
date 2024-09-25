@@ -89,7 +89,7 @@ if __name__ == "__main__":
         #     member["StudentCell"] = str(member["StudentCell"])
         #     member["ParentCell"] = str(member["ParentCell"])
 
-    rows, cols = (7, 7)
+    rows, cols = (8, 7)
     arr = rows * [[0] * cols]
 
     G_main = Tk()
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     G_win.transient(G_main)
     G_win.overrideredirect(1)
 
-    for r in range(0, 7):
+    for r in range(0, 8):
         for c in range(0,7):
             mtxt = ""
             for member in G_roster:
