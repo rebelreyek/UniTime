@@ -47,9 +47,10 @@ def get_data():
             return render_template('error.html', error_msg = error_msg)
     
     except Exception as e:
-        error_msg = "Hanna is bad at writing code" + e
+        error_msg = "Hanna is bad at writing code: " + e
         return render_template('error.html', error_msg = error_msg)
-    
+
+# may be irrelevant if we just reboot the app every day at 3am   
 def load_roster():
     # Open your Google Sheet by title
     G_workbook = client.open("StudentAttendance2425") # name of workbook
@@ -84,8 +85,8 @@ def student_data(member):
         outreach_target = 10
 
     if member["Leadership"] == "TRUE":
-        tech_target = 175
         v_build = 96 # 8x12
+        tech_target = 175
         if member["HBID"] == "7071199": # captain (CH) ID
             v_build = 120 # 8x15
             # tech_target = 200 # this is not in the handbook (oops)
@@ -113,6 +114,9 @@ def student_data(member):
             "outreach_hrs": outreach_hrs,
             "business_obj": business_obj,
             "outreach_ec": outreach_ec,
+            "biz_honors": biz_honors,
+            "outreach_honors": outreach_honors,
+            "tech_honors": tech_honors,
     }
     return data
      
