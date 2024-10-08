@@ -4,4 +4,4 @@ G_team.json
 roster.json
 # exception to the rule
 /timeclock24/logs/*
-!/timeclock24/logs/.gitkeep
+!/timeclock24/logs/.gitkeepS

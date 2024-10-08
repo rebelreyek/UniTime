@@ -1,78 +1,81 @@
 from flask import Flask, request, jsonify, render_template
-import gspread
+import gspread, json
 from oauth2client.service_account import ServiceAccountCredentials
 
 app = Flask(__name__)
+secretpath = 'C:/Users/hanna keyerleber/Documents/GitHub/UniTime/'
 
 # Define the scope and credentials for Google Sheets API
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-credentials = ServiceAccountCredentials.from_json_keyfile_name('secret.json', scope)
+credentials = ServiceAccountCredentials.from_json_keyfile_name(secretpath + '2399_secret.json', scope)
 client = gspread.authorize(credentials)
 
-# Open your Google Sheet by title
-G_workbook = client.open("StudentAttendance2324") # name of workbook
-G_sheet_roster = G_workbook.worksheet("Student") # name of worksheet
-G_team = G_sheet_roster.get_all_records() # all data in worksheet in json
+G_workbook = client.open("StudentAttendance2425") # name of workbook
+G_sheet_roster = G_workbook.worksheet("Cumulative") # name of worksheet
+G_roster = G_sheet_roster.get_all_records()
 
-# landing page to search for student ID
+# fix up to string
+for member in G_roster:
+            member["HBID"] = str(member["HBID"])
+
 @app.route('/')
-def index():
+def home():
     return render_template('homepage.html')
 
 @app.route('/get_data', methods=['GET'])
 def get_data():
-    id_number = request.args.get('id')
-
-    if not id_number:
-        return jsonify({"error": "ID number not provided"})
-
     try:
-        cell_list = G_sheet_roster.findall(id_number)
-        if cell_list:
-            # Take the first cell found
-            cell = cell_list[0]
-            row = cell.row
-            data = G_sheet_roster.row_values(row)
+        id_number = request.args.get('id')
 
-            # pull out student name
-            stuName = data[1]
+        if not id_number:
+            error_msg = "No ID Provided"
+            return render_template('error.html', error_msg = error_msg)
+        elif len(id_number) != 7:
+            error_msg = "Invalid ID"
+            return render_template('error.html', error_msg = error_msg)
 
-            # pull out student data
-            preHours = float(data[3])
-            preTargetA = int(data[4])
-            prePercentA = int(data[5])
-            preTargetB = int(data[6])
-            prePercentB = int(data[7])
-            buildHours = float(data[8])
-            buildTargetA = int(data[9])
-            buildPercentA = int(data[10])
-            buildTargetB = float(data[11])
-            buildPercentB = int(data[12])
-            techHours = float(data[13])
-            techTarget = float(data[14])
-            techPercent = int(data[15])
-            outHours = float(data[16])
-            outTarget = int(data[17])
-            outPercent = int(data[18])
-            bizObj = int(data[19])
-            bizTarget = int(data[20])
-            bizPercent = int(data[21])
-
-            results = { "preHours": preHours, "prePercentA": prePercentA, "prePercentB": prePercentB, 
-                        "preTargetA": preTargetA, "preTargetB": preTargetB, 
-                        "buildHours": buildHours, "buildTargetA": buildTargetA, "buildTargetB": buildTargetB, 
-                        "buildPercentA": buildPercentA, "buildPercentB": buildPercentB, 
-                        "techHours": techHours, "techTarget": techTarget, "techPercent": techPercent,
-                        "outPercent": outPercent, "outTarget": outTarget, "outHours": outHours,
-                        "bizPercent": bizPercent, "bizTarget": bizTarget, "bizObj": bizObj}
-
-            return render_template('display_data.html', stuName = stuName, results = results)
-
-
+        user_found = False
+        for member in G_roster:
+            if member["HBID"] == id_number:
+                user_found = True
+                break
+        if user_found:
+            data = student_data(member)
+            return render_template('display.html', data = data)
         else:
-            return jsonify({"error": "ID not found"})
+            error_msg = "HBID not found"
+            return render_template('error.html', error_msg = error_msg)
+    
     except Exception as e:
-        return jsonify({"hanna is bad at writing exceptions"})
+        error_msg = "Hanna is bad at writing code" + e
+        return render_template('error.html', error_msg = error_msg)
+    
+def load_roster():
+    # Open your Google Sheet by title
+    G_workbook = client.open("StudentAttendance2425") # name of workbook
+    G_sheet_roster = G_workbook.worksheet("Cumulative") # name of worksheet
+    G_roster = G_sheet_roster.get_all_records()
+
+    # fix up to string
+    for member in G_roster:
+        member["HBID"] = str(member["HBID"])
+        
+    return G_roster
+
+def student_data(member):
+    outreach_hrs = 20
+    tech_hrs = 125
+    name = member["Name"]
+
+    if member["Rookie"] == "TRUE":
+        outreach_hrs = 10
+
+    if member["Leadership"] == "TRUE":
+         tech_hrs = 175
+
+    data = {"name": name, "outreach": outreach_hrs, "tech": tech_hrs}
+    return data
+     
 
 if __name__ == '__main__':
     app.run(debug=True)
