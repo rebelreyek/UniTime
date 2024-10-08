@@ -63,17 +63,57 @@ def load_roster():
     return G_roster
 
 def student_data(member):
-    outreach_hrs = 20
-    tech_hrs = 125
+    # general requirements
+    outreach_target = 20
+    tech_target = 125
+    pre_target = 30
+    biz_target = 3
+
+    # 8 week build season
+    jv_build = 24 # 8x3
+    v_build = 72 # 8x9
+
+    # honors - blanket across the board, so could live somewhere else. or here
+    biz_honors = 6
+    outreach_honors = 35
+    tech_honors = 250
+
     name = member["Name"]
 
     if member["Rookie"] == "TRUE":
-        outreach_hrs = 10
+        outreach_target = 10
 
     if member["Leadership"] == "TRUE":
-         tech_hrs = 175
+        tech_target = 175
+        v_build = 96 # 8x12
+        if member["HBID"] == "7071199": # captain (CH) ID
+            v_build = 120 # 8x15
+            # tech_target = 200 # this is not in the handbook (oops)
 
-    data = {"name": name, "outreach": outreach_hrs, "tech": tech_hrs}
+    pre_hrs = member["Pre-Season"]
+    build_hrs = member["Build Season"]
+    tech_hrs = member["Total Tech Hours"]
+    outreach_hrs = member["Outreach"]
+    business_obj = member["Business"]
+    outreach_ec = False
+
+    if member["Outreach EC"] == "TRUE":
+        outreach_ec = True
+
+    data = {"name": name, 
+            "outreach_target": outreach_target, 
+            "tech_target": tech_target,
+            "biz_target": biz_target,
+            "pre_target": pre_target,
+            "jv_build": jv_build,
+            "v_build": v_build,
+            "pre_hrs": pre_hrs,
+            "build_hrs": build_hrs,
+            "tech_hrs": tech_hrs,
+            "outreach_hrs": outreach_hrs,
+            "business_obj": business_obj,
+            "outreach_ec": outreach_ec,
+    }
     return data
      
 
