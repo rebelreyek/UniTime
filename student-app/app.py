@@ -89,7 +89,7 @@ def student_data(member):
         tech_target = 175
         if member["HBID"] == "7071199": # captain (CH) ID
             v_build = 120 # 8x15
-            # tech_target = 200 # this is not in the handbook (oops)
+            tech_target = 200 # this is not in the handbook (oops)
 
     pre_hrs = member["Pre-Season"]
     build_hrs = member["Build Season"]
@@ -112,14 +112,11 @@ def student_data(member):
             "build_hrs": build_hrs,
             "tech_hrs": tech_hrs,
             "outreach_hrs": outreach_hrs,
-            "business_obj": business_obj,
+            "biz_obj": business_obj,
             "outreach_ec": outreach_ec,
-            "biz_honors": biz_honors,
-            "outreach_honors": outreach_honors,
-            "tech_honors": tech_honors,
     }
     return data
      
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
