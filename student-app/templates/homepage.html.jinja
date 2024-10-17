@@ -1,0 +1,17 @@
+{% extends 'base.html.jinja' %}
+
+{% block title %}Search by ID{% endblock %}
+
+{% block content %}
+  <form action="/get_data" method="get">
+    <div class="field">
+      <label class="label" for="id_number">Enter your HBID:</label>
+      <input class="input" type="text" id="id_number" name="id" required placeholder="1234123">
+      <p class="help">This is the number underneath the barcode on your badge</p>
+    </div>
+    <div class="control">
+      <input class="button is-primary" type="submit" value="Search">
+    </div>
+    </div>
+  </form>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends 'base.html.jinja' %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+  <div class="notification is-danger">
+    <p>{{ error_msg }}</p>
+  </div>
+{% endblock %}
