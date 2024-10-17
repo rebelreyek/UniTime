@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Copy the dependencies file to the working directory
 COPY /student-app/. .
-COPY /requirements.txt .
+COPY requirements.txt .
 
 # Install any dependencies
 RUN pip install -r requirements.txt
