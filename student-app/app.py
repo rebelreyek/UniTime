@@ -3,6 +3,7 @@ from pathlib import Path
 from flask import Flask, request, jsonify, render_template
 import gspread, json
 from oauth2client.service_account import ServiceAccountCredentials
+from pathlib import Path
 
 app = Flask(__name__)
 secretpath = Path(__file__).parent.parent / '2399_secret.json'

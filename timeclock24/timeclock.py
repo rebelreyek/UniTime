@@ -17,6 +17,7 @@ import locale
 import threading
 import queue
 import datetime
+from pathlib import Path
 
 # imports for UI
 from tkinter import *
@@ -45,7 +46,7 @@ def keydown(e):
 
 if __name__ == "__main__":
 
-    secretpath = 'C:/Users/hanna keyerleber/Documents/GitHub/UniTime/'
+    secretpath = Path(__file__).parent/ '2399_secret.json'
 
     if os.environ.get('DISPLAY','') == '':
         print('no display found. Using :0.0')
