@@ -1,0 +1,79 @@
+{% extends 'base.html.jinja' %}
+
+{% block title %}{{ data.name }}{% endblock %}
+
+{% block content %}
+<div class="tabs">
+  <ul>
+    <li data-target="jv-progress" class="is-active"><a>Junior Varsity</a></li>
+    <li data-target="varsity-progress"><a>Varsity</a></li>
+    <li data-target="honors-progress"><a>Honors</a></li>
+  </ul>
+</div>
+<div id="jv-progress">
+  {{ unitime_progress("jv-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
+  {{ unitime_progress("jv-build", "Build Season (January-February)", data.build_hrs, data.jv_build) }}
+</div>
+<div class="is-hidden" id="varsity-progress">
+  {{ unitime_progress("varsity-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
+  {{ unitime_progress("varsity-build", "Build Season (January-February)", data.build_hrs, data.v_build) }}
+  {{ unitime_progress("varsity-tech", "Total Tech Hours", data.tech_hrs, data.tech_target) }}
+  {{ unitime_progress("varsity-outreach", "Outreach Hours", data.outreach_hrs, data.outreach_target) }}
+  {{ unitime_progress("varsity-business", "Business Objectives", data.biz_obj, 3) }}
+</div>
+<div class="is-hidden" id="honors-progress">
+  {{ unitime_progress("honors-tech", "Total Tech Hours", data.tech_hrs, 250) }}
+  {{ unitime_progress("honors-outreach", "Outreach Hours", data.outreach_hrs, 35) }}
+  {{ unitime_progress("honors-ec", "Outreach Event Coordinator", data.outreach_ec, 1) }}
+  {{ unitime_progress("honors-business", "Business Objectives", data.biz_obj, 6) }}
+</div>
+<script type="text/javascript">
+  // a little lifted from bulma.io, makes clicking on the tabs work
+  document.addEventListener('DOMContentLoaded', () => {
+    // Get all "tab" elements
+    const tabs = Array.from(document.querySelectorAll('.tabs > ul > li'))
+    const allTargets = tabs.map(el => document.getElementById(el.dataset.target))
+    // Add a click event on each of them
+    tabs.forEach( el => {
+      el.addEventListener('click', () => {
+        // Get the target from the "data-target" attribute
+        const target = document.getElementById(el.dataset.target)
+        // Mark all tabs as inactive
+        tabs.forEach(el => el.classList.remove('is-active'))
+        // Hide other contents
+        allTargets.forEach(el => el.classList.add('is-hidden'))
+        // Mark the clicked tab as active
+        el.classList.add('is-active')
+        // Show contents for selected tab
+        target.classList.remove('is-hidden')
+      });
+    });
+  });
+</script>
+{%  endblock %}
+
+{% macro unitime_progress(slug, label, value, max) %}
+  {#
+    TODO: this should be based on weeks elapsed, so that students are warned
+    if they are off track vs just early in the season
+  #}
+  {% set progress = (value | float) / (max | float) %}
+  {% if progress < 0.5 %}
+    {% set progress_class = "is-danger" %}
+  {% elif progress < 1 %}
+    {% set progress_class = "is-warning" %}
+  {% else %}
+    {% set progress_class = "is-success" %}
+  {% endif %}
+
+  <div class="unitime-progress block">
+    <label class="label" for="progress-bar-{{ slug }}">{{ label }}</label>
+    <progress
+      class="progress {{progress_class}}"
+      id="progress-bar-{{ slug }}"
+      value="{{ (value | float) if (value | float) > 0 else 0.05 * (max | float)}}"
+      max="{{ max | float}}">
+    </progress>
+    {{ value | float }} of {{ max | float}}
+  </div>
+{%  endmacro %}

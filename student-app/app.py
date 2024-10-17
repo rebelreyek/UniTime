@@ -1,13 +1,15 @@
+from pathlib import Path
+
 from flask import Flask, request, jsonify, render_template
 import gspread, json
 from oauth2client.service_account import ServiceAccountCredentials
 
 app = Flask(__name__)
-secretpath = 'C:/Users/hanna keyerleber/Documents/GitHub/UniTime/'
+secretpath = Path(__file__).parent.parent / '2399_secret.json'
 
 # Define the scope and credentials for Google Sheets API
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-credentials = ServiceAccountCredentials.from_json_keyfile_name(secretpath + '2399_secret.json', scope)
+credentials = ServiceAccountCredentials.from_json_keyfile_name(secretpath, scope)
 client = gspread.authorize(credentials)
 
 G_workbook = client.open("StudentAttendance2425") # name of workbook
@@ -20,7 +22,7 @@ for member in G_roster:
 
 @app.route('/')
 def home():
-    return render_template('homepage.html')
+    return render_template('homepage.html.jinja')
 
 @app.route('/get_data', methods=['GET'])
 def get_data():
@@ -29,10 +31,10 @@ def get_data():
 
         if not id_number:
             error_msg = "No ID Provided"
-            return render_template('error.html', error_msg = error_msg)
+            return render_template('error.html.jinja', error_msg = error_msg)
         elif len(id_number) != 7:
             error_msg = "Invalid ID"
-            return render_template('error.html', error_msg = error_msg)
+            return render_template('error.html.jinja', error_msg = error_msg)
 
         user_found = False
         for member in G_roster:
@@ -41,14 +43,14 @@ def get_data():
                 break
         if user_found:
             data = student_data(member)
-            return render_template('display.html', data = data)
+            return render_template('display.html.jinja', data = data)
         else:
             error_msg = "HBID not found"
-            return render_template('error.html', error_msg = error_msg)
+            return render_template('error.html.jinja', error_msg = error_msg)
     
     except Exception as e:
         error_msg = "Hanna is bad at writing code: " + e
-        return render_template('error.html', error_msg = error_msg)
+        return render_template('error.html.jinja', error_msg = error_msg)
 
 # may be irrelevant if we just reboot the app every day at 3am   
 def load_roster():
