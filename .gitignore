@@ -6,3 +6,4 @@ roster.json
 /timeclock24/logs/*
 !/timeclock24/logs/.gitkeep
 .venv
+*.pyc

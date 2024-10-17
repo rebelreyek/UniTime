@@ -39,3 +39,11 @@ install: $(VENV)
 	install sync-gh-keys.service sync-gh-keys.timer $(HOME)/.config/systemd/user/
 	systemctl --user enable sync-gh-keys.timer
 	echo "Make sure to add SYNC_GH_USERS to ~/.config/environment.d/sync_gh_users.conf !"
+
+.PHONY: run
+run: $(VENV)
+	$(VENV_PYTHON) -m flask --app student-app/app.py run
+
+.PHONY: debug
+debug: $(VENV)
+	$(VENV_PYTHON) -m flask --app student-app/app.py run --debug
