@@ -8,14 +8,14 @@ EXPOSE 5000/tcp
 WORKDIR /app
 
 # Copy the dependencies file to the working directory
-COPY /student-app/. .
 COPY requirements.txt .
+COPY 2399_secret.json .
 
 # Install any dependencies
 RUN pip install -r requirements.txt
 
 # Copy the content of the local src directory to the working directory
-COPY /student-app/app.py .
+COPY student-app/ /app/student-app/
 
 # Specify the command to run on container start
-CMD [ "python", "./app.py" ]
+CMD [ "python", "./student-app/app.py" ]
