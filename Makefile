@@ -32,13 +32,15 @@ update_requirements: requirements-loose.txt
 	$(VENV_PIP) freeze > requirements.txt
 	$(MAKE) $(VENV)
 
-.PHONY: install
-install: $(VENV)
-	ln -s $(PWD) $(HOME)/sync_gh_keys
-	mkdir -p $(HOME)/.config/systemd/user/
-	install sync-gh-keys.service sync-gh-keys.timer $(HOME)/.config/systemd/user/
-	systemctl --user enable sync-gh-keys.timer
-	echo "Make sure to add SYNC_GH_USERS to ~/.config/environment.d/sync_gh_users.conf !"
+.PHONY: build
+build:
+	docker build -t student-app .
+
+.PHONY: deploy
+deploy: build
+	# TODO: Install awscli, lightsailctl in venv
+	aws lightsail push-container-image  --service-name student-app --label student-app --image student-app:latest
+	aws lightsail create-container-service-deployment --no-cli-pager --cli-input-json "$(<lightsail.json)"
 
 .PHONY: run
 run: $(VENV)

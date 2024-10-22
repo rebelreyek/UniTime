@@ -1,4 +1,6 @@
+import multiprocessing
 from pathlib import Path
+
 
 from flask import Flask, request, jsonify, render_template
 import gspread, json
@@ -13,17 +15,34 @@ scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/au
 credentials = ServiceAccountCredentials.from_json_keyfile_name(secretpath, scope)
 client = gspread.authorize(credentials)
 
+
 G_workbook = client.open("StudentAttendance2425") # name of workbook
 G_sheet_roster = G_workbook.worksheet("Cumulative") # name of worksheet
-G_roster = G_sheet_roster.get_all_records()
 
-# fix up to string
-for member in G_roster:
+
+def refresh_roster(_lock=multiprocessing.Lock()):
+    with _lock:
+        roster = G_sheet_roster.get_all_records()
+        # fix up to string
+        for member in roster:
             member["HBID"] = str(member["HBID"])
+        return roster
+
+
+G_roster = refresh_roster()
+
+
+@app.route('/refresh', methods=['POST'])
+def refresh():
+    global G_roster
+    G_roster = refresh_roster()
+    return jsonify({'refreshed': len(G_roster)})
+
 
 @app.route('/')
 def home():
     return render_template('homepage.html.jinja')
+
 
 @app.route('/get_data', methods=['GET'])
 def get_data():

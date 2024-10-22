@@ -1,0 +1,25 @@
+{
+	"serviceName": "student-app",
+	"containers": {
+		"student-app": {
+			"image": ":student-app.student-app.latest",
+			"command": [],
+			"environment": {},
+			"ports": {
+				"5000": "HTTP"
+			}
+		}
+	},
+	"publicEndpoint": {
+		"containerName": "student-app",
+		"containerPort": 5000,
+		"healthCheck": {
+			"healthyThreshold": 2,
+			"unhealthyThreshold": 2,
+			"timeoutSeconds": 2,
+			"intervalSeconds": 5,
+			"path": "/",
+			"successCodes": "200-499"
+		}
+	}
+}
