@@ -20,12 +20,14 @@
   {{ unitime_progress("varsity-tech", "Total Tech Hours", data.tech_hrs, data.tech_target) }}
   {{ unitime_progress("varsity-outreach", "Outreach Hours", data.outreach_hrs, data.outreach_target) }}
   {{ unitime_progress("varsity-business", "Business Objectives", data.biz_obj, 3) }}
+  {{ unitime_progress("varsity-business-req", "Business Fundraising", data.biz_fund, 100) }}
 </div>
 <div class="is-hidden" id="honors-progress">
   {{ unitime_progress("honors-tech", "Total Tech Hours", data.tech_hrs, 250) }}
   {{ unitime_progress("honors-outreach", "Outreach Hours", data.outreach_hrs, 35) }}
   {{ unitime_progress("honors-ec", "Outreach Event Coordinator", data.outreach_ec, 1) }}
   {{ unitime_progress("honors-business", "Business Objectives", data.biz_obj, 6) }}
+  {{ unitime_progress("varsity-business-req", "Business Fundraising", data.biz_fund, 100) }}
 </div>
 <script type="text/javascript">
   // a little lifted from bulma.io, makes clicking on the tabs work

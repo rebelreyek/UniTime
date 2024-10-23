@@ -118,6 +118,7 @@ def student_data(member):
     tech_hrs = member["Total Tech Hours"]
     outreach_hrs = member["Outreach"]
     business_obj = member["Business"]
+    business_fundraising = member["Value"]
     outreach_ec = False
 
     if member["Outreach EC"] == "TRUE":
@@ -135,6 +136,7 @@ def student_data(member):
             "tech_hrs": tech_hrs,
             "outreach_hrs": outreach_hrs,
             "biz_obj": business_obj,
+            "biz_fund": business_fundraising,
             "outreach_ec": outreach_ec,
     }
     return data
