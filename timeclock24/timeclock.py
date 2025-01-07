@@ -46,7 +46,7 @@ def keydown(e):
 
 if __name__ == "__main__":
 
-    secretpath = Path(__file__).parent/ '2399_secret.json'
+    mypath = "C:/Users/Owner/Documents/GitHub/UniTime/timeclock24/"
 
     if os.environ.get('DISPLAY','') == '':
         print('no display found. Using :0.0')
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     # set our credentials to access google docs
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name(secretpath + '2399_secret.json', scope)
+    creds = ServiceAccountCredentials.from_json_keyfile_name(mypath + '2399_secret.json', scope)
     client = gspread.authorize(creds)
 
     # open workbook
