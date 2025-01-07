@@ -101,6 +101,9 @@ def student_data(member):
     outreach_honors = 35
     tech_honors = 250
 
+    # team meeting count - blanket across the board, so could live somehwere else. or here
+    team_meeting = 8 #8x1
+
     name = member["Name"]
 
     if member["Rookie"] == "TRUE":
@@ -120,6 +123,7 @@ def student_data(member):
     business_obj = member["Business"]
     business_fundraising = member["Value"]
     outreach_ec = False
+    meet_attendance = member["Team Meetings"]
 
     if member["Outreach EC"] == "TRUE":
         outreach_ec = True
@@ -138,6 +142,7 @@ def student_data(member):
             "biz_obj": business_obj,
             "biz_fund": business_fundraising,
             "outreach_ec": outreach_ec,
+            "meet_attendance": meet_attendance,
     }
     return data
      
