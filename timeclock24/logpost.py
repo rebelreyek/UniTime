@@ -33,7 +33,7 @@ if __name__ == "__main__":
     G_workbook = client.open("StudentAttendance2425")
 
     # get workbook timelog tab
-    G_sheet_timelog = G_workbook.worksheet("PreSeason")
+    G_sheet_timelog = G_workbook.worksheet("BuildSeason")
 
     # loop to upload any log files
     # files are deleted if uploaded successfully

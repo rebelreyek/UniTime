@@ -15,12 +15,26 @@
   {{ unitime_progress("jv-build", "Build Season (January-February)", data.build_hrs, data.jv_build) }}
 </div>
 <div class="is-hidden" id="varsity-progress">
-  {{ unitime_progress("varsity-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
-  {{ unitime_progress("varsity-build", "Build Season (January-February)", data.build_hrs, data.v_build) }}
-  {{ unitime_progress("varsity-tech", "Total Tech Hours", data.tech_hrs, data.tech_target) }}
-  {{ unitime_progress("varsity-outreach", "Outreach Hours", data.outreach_hrs, data.outreach_target) }}
-  {{ unitime_progress("varsity-business", "Business Objectives", data.biz_obj, 3) }}
-  {{ unitime_progress("varsity-business-req", "Business Fundraising", data.biz_fund, 100) }}
+  <div class="tabs">
+  <ul>
+    <li data-target="track-a" class="is-active"><a>Track A/a></li>
+    <li data-target="track-b"><a>Track B</a></li>
+  </ul>
+  </div>
+  <div id="track-a">
+    {{ unitime_progress("varsity-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
+    {{ unitime_progress("varsity-build", "Build Season (January-February)", data.build_hrs, data.v_build) }}
+    {{ unitime_progress("varsity-outreach", "Outreach Hours", data.outreach_hrs, data.outreach_target) }}
+    {{ unitime_progress("varsity-business", "Business Objectives", data.biz_obj, 3) }}
+    {{ unitime_progress("varsity-business-req", "Business Fundraising", data.biz_fund, 100) }}
+  </div>
+  <div class="is-hidden" id="track-b">
+    {{ unitime_progress("varsity-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
+    {{ unitime_progress("varsity-tech", "Total Tech Hours", data.tech_hrs, data.tech_target) }}
+    {{ unitime_progress("varsity-outreach", "Outreach Hours", data.outreach_hrs, data.outreach_target) }}
+    {{ unitime_progress("varsity-business", "Business Objectives", data.biz_obj, 3) }}
+    {{ unitime_progress("varsity-business-req", "Business Fundraising", data.biz_fund, 100) }}
+  </div>
 </div>
 <div class="is-hidden" id="honors-progress">
   {{ unitime_progress("honors-tech", "Total Tech Hours", data.tech_hrs, 250) }}
