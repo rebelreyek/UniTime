@@ -1,0 +1,1 @@
+curl -X POST https://students.frc2399.org/refresh
