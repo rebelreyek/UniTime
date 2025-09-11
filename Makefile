@@ -27,8 +27,6 @@ clean_venv: ensure_out_of_venv
 	$(VENV_PIP) install --upgrade pip wheel
 
 $(VENV_SENTINEL): requirements.txt
-	$(MAKE) clean_venv
-	$(VENV_PIP) install -r $^
 	touch $(VENV_SENTINEL)
 
 .PHONY: update_requirements
