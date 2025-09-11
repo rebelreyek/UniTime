@@ -81,7 +81,7 @@ if __name__ == "__main__":
     G_workbook = client.open("StudentAttendance2526")
 
     # get workbook tabs
-    G_sheet_roster = G_workbook.worksheet("Roster")
+    G_sheet_data = G_workbook.worksheet("Roster")
     G_sheet_dates = G_workbook.worksheet("Dates")
 
     # memory structure
@@ -95,7 +95,7 @@ if __name__ == "__main__":
         f.close()
         print("Roster loaded from local file roster.json.  Delete to load from google.")
     except:
-        G_roster = G_sheet_roster.get_all_records()
+        G_roster = G_sheet_data.get_all_records()
         print("Local file roster.json not found.  Roster loaded from google.")
 
         # fixup numerics to strings for later comparisons
