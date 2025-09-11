@@ -8,7 +8,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from pathlib import Path
 
 app = Flask(__name__)
-secretpath = Path(__file__).parent.parent / '2399_secret.json'
+secretpath = Path(__file__).parent.parent / 'timeclock24/2399_secret.json'
 
 # Define the scope and credentials for Google Sheets API
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -18,6 +18,7 @@ client = gspread.authorize(credentials)
 
 G_workbook = client.open("StudentAttendance2425") # name of workbook
 G_sheet_roster = G_workbook.worksheet("Cumulative") # name of worksheet
+G_sheet_checklist = G_workbook.worksheet("Roster") # name of worksheet with checklist items
 
 
 def refresh_roster(_lock=multiprocessing.Lock()):
@@ -28,15 +29,26 @@ def refresh_roster(_lock=multiprocessing.Lock()):
             member["HBID"] = str(member["HBID"])
         return roster
 
+def refresh_checklist(_lock=multiprocessing.Lock()):
+    with _lock:
+        checklist = G_sheet_checklist.get_all_records()
+        # fix up to string
+        for member in checklist:
+            member["HBID"] = str(member["HBID"])
+        return checklist
+
 
 G_roster = refresh_roster()
+G_checklist = refresh_checklist()
 
 
 @app.route('/refresh', methods=['POST'])
 def refresh():
-    global G_roster
+    global G_roster, G_checklist
     G_roster = refresh_roster()
-    return jsonify({'refreshed': len(G_roster)})
+    G_checklist = refresh_checklist()
+    refresh = len(G_roster) + len(G_checklist)
+    return jsonify({'refreshed': refresh})
 
 
 @app.route('/')
@@ -63,6 +75,7 @@ def get_data():
                 break
         if user_found:
             data = student_data(member)
+            # TODO: dont show leadership JV
             return render_template('display.html.jinja', data = data)
         else:
             error_msg = "HBID not found"
@@ -75,7 +88,7 @@ def get_data():
 # may be irrelevant if we just reboot the app every day at 3am   
 def load_roster():
     # Open your Google Sheet by title
-    G_workbook = client.open("StudentAttendance2425") # name of workbook
+    G_workbook = client.open("StudentAttendance2526") # name of workbook
     G_sheet_roster = G_workbook.worksheet("Cumulative") # name of worksheet
     G_roster = G_sheet_roster.get_all_records()
 
@@ -84,6 +97,18 @@ def load_roster():
         member["HBID"] = str(member["HBID"])
         
     return G_roster
+
+def load_checklist():
+    # Open your Google Sheet by title
+    G_workbook = client.open("StudentAttendance2526") # name of workbook
+    G_sheet_checklist = G_workbook.worksheet("Roster") # name of worksheet
+    G_checklist = G_sheet_checklist.get_all_records()
+
+    # fix up to string
+    for member in G_checklist:
+        member["HBID"] = str(member["HBID"])
+        
+    return G_checklist
 
 def student_data(member):
     # general requirements
@@ -112,15 +137,13 @@ def student_data(member):
     if member["Leadership"] == "TRUE":
         v_build = 96 # 8x12
         tech_target = 175
-        if member["HBID"] == "7071199": # captain (CH) ID
-            v_build = 120 # 8x15
-            tech_target = 200 # this is not in the handbook (oops)
 
     pre_hrs = member["Pre-Season"]
     build_hrs = member["Build Season"]
     tech_hrs = member["Total Tech Hours"]
     outreach_hrs = member["Outreach"]
     business_obj = member["Business"]
+    business_proof = member["Proofread"]
     business_fundraising = member["Value"]
     outreach_ec = False
     meet_attendance = member["Team Meetings"]
@@ -128,23 +151,39 @@ def student_data(member):
     if member["Outreach EC"] == "TRUE":
         outreach_ec = True
 
-    data = {"name": name, 
-            "outreach_target": outreach_target, 
-            "tech_target": tech_target,
-            "biz_target": biz_target,
-            "pre_target": pre_target,
-            "jv_build": jv_build,
-            "v_build": v_build,
-            "pre_hrs": pre_hrs,
-            "build_hrs": build_hrs,
-            "tech_hrs": tech_hrs,
-            "outreach_hrs": outreach_hrs,
-            "biz_obj": business_obj,
-            "biz_fund": business_fundraising,
-            "outreach_ec": outreach_ec,
-            "meet_attendance": meet_attendance,
+    data = {
+        "name": name, 
+        "outreach_target": outreach_target, 
+        "tech_target": tech_target,
+        "biz_target": biz_target,
+        "pre_target": pre_target,
+        "jv_build": jv_build,
+        "v_build": v_build,
+        "pre_hrs": pre_hrs,
+        "build_hrs": build_hrs,
+        "tech_hrs": tech_hrs,
+        "outreach_hrs": outreach_hrs,
+        "biz_obj": business_obj,
+        "biz_fund": business_fundraising,
+        "biz_proof": business_proof,
+        "outreach_ec": outreach_ec,
+        "meet_attendance": meet_attendance,
     }
     return data
+
+def student_checklist(member):
+    contract = member["Contract"]
+    bison = member["695"]
+    FIRST = member["FIRST"]
+    onboard = member["Onboarding"]
+
+    data = {
+        "contract": contract,
+        "bison": bison,
+        "FIRST": FIRST,
+        "onboard": onboard,
+    }
+    return checklist
      
 
 if __name__ == '__main__':

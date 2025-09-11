@@ -44,9 +44,20 @@ def keydown(e):
         key_queue.put('9')
         key_queue.put('5')
 
+def checkdate(dates):
+    log_name = "logs/{d.year}{d.month:02}{d.day:02}".format(d=datetime.datetime.now())
+    today = datetime.datetime.now().strftime('%Y-%m-%d')
+    for date in dates:
+        if date == today:
+            log_name = log_name + "A"
+            break
+    log_name = log_name + ".log"
+
+    return log_name
+
 if __name__ == "__main__":
 
-    mypath = "C:/Users/Owner/Documents/GitHub/UniTime/timeclock24/"
+    mypath = Path(__file__).parent.as_posix()
 
     if os.environ.get('DISPLAY','') == '':
         print('no display found. Using :0.0')
@@ -63,18 +74,19 @@ if __name__ == "__main__":
 
     # set our credentials to access google docs
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name(mypath + '2399_secret.json', scope)
+    creds = ServiceAccountCredentials.from_json_keyfile_name(mypath + '/2399_secret.json', scope)
     client = gspread.authorize(creds)
 
     # open workbook
-    G_workbook = client.open("StudentAttendance2425")
+    G_workbook = client.open("StudentAttendance2526")
 
     # get workbook tabs
     G_sheet_roster = G_workbook.worksheet("Roster")
-    # G_sheet_timelog = G_workbook.worksheet("TimeLog")
+    G_sheet_dates = G_workbook.worksheet("Dates")
 
-    # roster memory structure
+    # memory structure
     G_roster = {}
+    G_dates = {}
 
     # try loading from local json
     try:
@@ -91,6 +103,19 @@ if __name__ == "__main__":
             member["HBID"] = str(member["HBID"])
         #     member["StudentCell"] = str(member["StudentCell"])
         #     member["ParentCell"] = str(member["ParentCell"])
+
+    # load special dates from local json
+    try:
+        f = open("dates.json", "r")
+        G_dates = json.load(f)
+        f.close()
+        print("Special dates loaded from local file dates.json.")
+    except:
+        G_dates = G_sheet_dates.get_all_records()
+        print("Local file dates.json not found.  Dates loaded from google.")
+
+        for date in G_dates:
+            date = str(date)
 
     rows, cols = (8, 7)
     arr = rows * [[0] * cols]
@@ -191,7 +216,7 @@ if __name__ == "__main__":
             while not key_queue.empty():
                 user_id = user_id + key_queue.get()
 
-        # user id must be 3 digits, so just loop if nothing to look up yet
+        # user id must be 7 digits, so just loop if nothing to look up yet
         if len(user_id) != 7:
             continue
 
@@ -231,9 +256,9 @@ if __name__ == "__main__":
                         # write logs longer than 12hrs or shorter than 5min as 0
                         if delta <= 5 or delta > 720:
                             delta = 0
-
+                        logname = checkdate(G_dates)
                         l = G_member["HBID"] + "\t" + G_member["StudentFirst"] + "\t" + G_member["ClockIn"] + "\t" + G_member["ClockOut"] + "\t" + str(delta) + "\r"
-                        f = open("logs/{d.year}{d.month:02}{d.day:02}.log".format(d=datetime.datetime.now()), "a")
+                        f = open(logname, "a")
                         f.write(l)
                         f.close()
                         child['fg'] = "lightgrey"

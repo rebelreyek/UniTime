@@ -1,8 +1,15 @@
 VENV := .venv
-VENV_SENTINEL := $(VENV)/.sentinel
-VENV_PYTHON := $(VENV)/bin/python
-VENV_PIP := $(VENV)/bin/pip
 
+
+ifeq ($(OS),Windows_NT)
+	VENV_PYTHON := $(VENV)/Scripts/python
+	VENV_PIP := $(VENV)/Scripts/pip
+	VENV_SENTINEL := $(VENV)/Scripts/.sentinel
+else
+	VENV_PYTHON := $(VENV)/bin/python
+	VENV_PIP := $(VENV)/bin/pip
+	VENV_SENTINEL := $(VENV)/.sentinel
+endif
 
 .PHONY: ensure_out_of_venv
 ensure_out_of_venv:
