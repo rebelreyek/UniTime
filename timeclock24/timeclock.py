@@ -111,11 +111,13 @@ if __name__ == "__main__":
         f.close()
         print("Special dates loaded from local file dates.json.")
     except:
-        G_dates = G_sheet_dates.get_all_records()
+        G_dates = G_sheet_dates.col_values(1)
         print("Local file dates.json not found.  Dates loaded from google.")
 
+        G_dates = G_dates[1:] # skip header row
+
         for date in G_dates:
-            date = str(date)
+            date = datetime.datetime.strptime(date, "%Y-%m-%d")
 
     rows, cols = (8, 7)
     arr = rows * [[0] * cols]

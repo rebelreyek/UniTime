@@ -17,6 +17,7 @@ import locale
 import threading
 import queue
 import datetime
+from pathlib import Path
 
 if __name__ == "__main__":
 
@@ -33,7 +34,7 @@ if __name__ == "__main__":
 
     # get workbook timelog tab
     preseason_timelog = G_workbook.worksheet("PreSeason")
-    tech_timelog = G_workbook.worksheet("TechHours")
+    tech_timelog = G_workbook.worksheet("ShopHours")
 
     # loop to upload any log files
     # files are deleted if uploaded successfully
