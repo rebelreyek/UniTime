@@ -1,6 +1,5 @@
 VENV := .venv
 
-
 ifeq ($(OS),Windows_NT)
 	VENV_PYTHON := $(VENV)/Scripts/python
 	VENV_PIP := $(VENV)/Scripts/pip
