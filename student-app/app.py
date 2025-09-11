@@ -8,7 +8,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from pathlib import Path
 
 app = Flask(__name__)
-secretpath = Path(__file__).parent.parent / '2399_secret.json'
+secretpath = Path(__file__).parent.parent / 'timeclock24/2399_secret.json'
 
 # Define the scope and credentials for Google Sheets API
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]

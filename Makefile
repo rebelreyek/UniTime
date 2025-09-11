@@ -1,8 +1,14 @@
 VENV := .venv
-VENV_SENTINEL := $(VENV)/.sentinel
-VENV_PYTHON := $(VENV)/bin/python
-VENV_PIP := $(VENV)/bin/pip
 
+ifeq ($(OS),Windows_NT)
+	VENV_PYTHON := $(VENV)/Scripts/python
+	VENV_PIP := $(VENV)/Scripts/pip
+	VENV_SENTINEL := $(VENV)/Scripts/.sentinel
+else
+	VENV_PYTHON := $(VENV)/bin/python
+	VENV_PIP := $(VENV)/bin/pip
+	VENV_SENTINEL := $(VENV)/.sentinel
+endif
 
 .PHONY: ensure_out_of_venv
 ensure_out_of_venv:
@@ -21,8 +27,6 @@ clean_venv: ensure_out_of_venv
 	$(VENV_PIP) install --upgrade pip wheel
 
 $(VENV_SENTINEL): requirements.txt
-	$(MAKE) clean_venv
-	$(VENV_PIP) install -r $^
 	touch $(VENV_SENTINEL)
 
 .PHONY: update_requirements
