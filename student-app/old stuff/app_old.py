@@ -11,8 +11,8 @@ client = gspread.authorize(credentials)
 
 # Open your Google Sheet by title
 G_workbook = client.open("StudentAttendance2324") # name of workbook
-G_sheet_roster = G_workbook.worksheet("Student") # name of worksheet
-G_team = G_sheet_roster.get_all_records() # all data in worksheet in json
+G_sheet_data = G_workbook.worksheet("Student") # name of worksheet
+G_team = G_sheet_data.get_all_records() # all data in worksheet in json
 
 # landing page to search for student ID
 @app.route('/')
@@ -27,12 +27,12 @@ def get_data():
         return jsonify({"error": "ID number not provided"})
 
     try:
-        cell_list = G_sheet_roster.findall(id_number)
+        cell_list = G_sheet_data.findall(id_number)
         if cell_list:
             # Take the first cell found
             cell = cell_list[0]
             row = cell.row
-            data = G_sheet_roster.row_values(row)
+            data = G_sheet_data.row_values(row)
 
             # pull out student name
             stuName = data[1]

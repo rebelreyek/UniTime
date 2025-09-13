@@ -242,7 +242,7 @@ def app_post_loop(who, clock):
                 with roster_lock:
                     try:
                         # pull roster in two steps in case google rate limits
-                        roster_tmp = G_sheet_roster.get_all_records()
+                        roster_tmp = G_sheet_data.get_all_records()
                         G_roster = roster_tmp
                     except:
                         pass
@@ -330,7 +330,7 @@ if __name__ == "__main__":
     G_workbook = client.open("StudentAttendance2324")
 
     # get workbook tabs
-    G_sheet_roster = G_workbook.worksheet("Roster")
+    G_sheet_data = G_workbook.worksheet("Roster")
     G_sheet_timelog = G_workbook.worksheet("TimeLog_build")
 
     # roster memory structure

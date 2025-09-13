@@ -16,18 +16,18 @@ credentials = ServiceAccountCredentials.from_json_keyfile_name(secretpath, scope
 client = gspread.authorize(credentials)
 
 
-G_workbook = client.open("StudentAttendance2425") # name of workbook
-G_sheet_roster = G_workbook.worksheet("Cumulative") # name of worksheet
-G_sheet_checklist = G_workbook.worksheet("Roster") # name of worksheet with checklist items
+G_workbook = client.open("StudentAttendance2526") # name of workbook
+G_sheet_data = G_workbook.worksheet("Cumulative") # name of worksheet with cumulative data
+G_sheet_checklist = G_workbook.worksheet("Checklist") # name of worksheet with checklist items
 
 
-def refresh_roster(_lock=multiprocessing.Lock()):
+def refresh_data(_lock=multiprocessing.Lock()):
     with _lock:
-        roster = G_sheet_roster.get_all_records()
+        data = G_sheet_data.get_all_records()
         # fix up to string
-        for member in roster:
+        for member in data:
             member["HBID"] = str(member["HBID"])
-        return roster
+        return data
 
 def refresh_checklist(_lock=multiprocessing.Lock()):
     with _lock:
@@ -38,16 +38,16 @@ def refresh_checklist(_lock=multiprocessing.Lock()):
         return checklist
 
 
-G_roster = refresh_roster()
+G_data = refresh_data()
 G_checklist = refresh_checklist()
 
 
 @app.route('/refresh', methods=['POST'])
 def refresh():
-    global G_roster, G_checklist
-    G_roster = refresh_roster()
+    global G_data, G_checklist
+    G_data = refresh_data()
     G_checklist = refresh_checklist()
-    refresh = len(G_roster) + len(G_checklist)
+    refresh = len(G_data) + len(G_checklist)
     return jsonify({'refreshed': refresh})
 
 
@@ -69,14 +69,15 @@ def get_data():
             return render_template('error.html.jinja', error_msg = error_msg)
 
         user_found = False
-        for member in G_roster:
+        for member in G_data:
             if member["HBID"] == id_number:
                 user_found = True
                 break
         if user_found:
             data = student_data(member)
+            checklist = student_checklist(member)
             # TODO: dont show leadership JV
-            return render_template('display.html.jinja', data = data)
+            return render_template('display.html.jinja', data = data, checklist = checklist)
         else:
             error_msg = "HBID not found"
             return render_template('error.html.jinja', error_msg = error_msg)
@@ -86,22 +87,22 @@ def get_data():
         return render_template('error.html.jinja', error_msg = error_msg)
 
 # may be irrelevant if we just reboot the app every day at 3am   
-def load_roster():
+def load_data():
     # Open your Google Sheet by title
     G_workbook = client.open("StudentAttendance2526") # name of workbook
-    G_sheet_roster = G_workbook.worksheet("Cumulative") # name of worksheet
-    G_roster = G_sheet_roster.get_all_records()
+    G_sheet_data = G_workbook.worksheet("Cumulative") # name of worksheet
+    G_data = G_sheet_data.get_all_records()
 
     # fix up to string
-    for member in G_roster:
+    for member in G_data:
         member["HBID"] = str(member["HBID"])
         
-    return G_roster
+    return G_data
 
 def load_checklist():
     # Open your Google Sheet by title
     G_workbook = client.open("StudentAttendance2526") # name of workbook
-    G_sheet_checklist = G_workbook.worksheet("Roster") # name of worksheet
+    G_sheet_checklist = G_workbook.worksheet("Checklist") # name of worksheet
     G_checklist = G_sheet_checklist.get_all_records()
 
     # fix up to string
@@ -172,18 +173,25 @@ def student_data(member):
     return data
 
 def student_checklist(member):
-    contract = member["Contract"]
-    bison = member["695"]
-    FIRST = member["FIRST"]
-    onboard = member["Onboarding"]
+    try:
+        FIRST = member["FIRST"]
+        contract = member["Contract"]
+        onboard = member["Onboarding"]
+        bison = member["695"]
 
-    data = {
-        "contract": contract,
-        "bison": bison,
-        "FIRST": FIRST,
-        "onboard": onboard,
-    }
-    return checklist
+        checklist = {
+            "FIRST": FIRST,
+            "contract": contract,
+            "onboard": onboard,
+            "bison": bison,
+        }
+
+        checklist = {k: v == "TRUE" for k, v in checklist.items()}
+
+        return checklist
+    except Exception as e:
+        print("Error loading checklist: " + str(e))
+        return {}
      
 
 if __name__ == '__main__':

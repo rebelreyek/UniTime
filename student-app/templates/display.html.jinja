@@ -6,22 +6,23 @@
 <div class="tabs">
   <ul>
     <li data-target="student-checklist" class="is-active"><a>Checklist</a></li>
-    <li data-target="jv-progress" class="is-active"><a>Junior Varsity</a></li>
+    <li data-target="jv-progress"><a>Junior Varsity</a></li>
     <li data-target="varsity"><a>Varsity</a></li>
     <li data-target="honors-progress"><a>Honors</a></li>
   </ul>
 </div>
 <div id="student-checklist">
   {{ "Coming Soon!" }}
+  {{ unitime_list(checklist)}}
 </div>
-<div id="jv-progress">
+<div class="is-hidden" id="jv-progress">
   {{ unitime_progress("jv-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
   {{ unitime_progress("jv-build", "Build Season (January-February)", data.build_hrs, data.jv_build) }}
   {{ unitime_progress("meet_attendance", "Team Meeting Attendance (Saturdays 4-5pm)", data.meet_attendance, 8) }}
 </div>
 <div class="is-hidden" id="varsity">
   {{ unitime_progress("varsity-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
-  {{ unitime_progress("varsity-build", "Build Season (January-February)", data.build_hrs, data.v_build) }}
+  {{ unitime_progress("varsity-build", "Build Season (January-February) ", data.build_hrs, data.v_build) }}
   {{ unitime_progress("meet_attendance", "Team Meeting Attendance (Saturdays 4-5pm)", data.meet_attendance, 8) }}
   {{ unitime_progress("varsity-outreach", "Outreach Hours", data.outreach_hrs, data.outreach_target) }}
   {{ unitime_progress("varsity-business", "Business Objectives", data.biz_obj, 3) }}
@@ -87,4 +88,12 @@
 {%  endmacro %}
 
 {% macro unitime_list(checklist) %}
+<ul>
+  {% for item, checked in checklist.items() %}
+    <li>
+      <input type="checkbox" {% if checked %}checked{% endif %} disabled>
+      {{ item }}
+    </li>
+  {% endfor %}
+</ul>
 {% endmacro %}
