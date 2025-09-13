@@ -1,24 +1,29 @@
 import multiprocessing
 from pathlib import Path
 
-
-from flask import Flask, request, jsonify, render_template
-import gspread, json
+import gspread
+from flask import Flask, jsonify, render_template, request
 from oauth2client.service_account import ServiceAccountCredentials
-from pathlib import Path
 
 app = Flask(__name__)
-secretpath = Path(__file__).parent.parent / 'timeclock24/2399_secret.json'
+secretpath = Path(__file__).parent.parent / "timeclock24/2399_secret.json"
 
 # Define the scope and credentials for Google Sheets API
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+scope = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive",
+]
 credentials = ServiceAccountCredentials.from_json_keyfile_name(secretpath, scope)
 client = gspread.authorize(credentials)
 
 
-G_workbook = client.open("StudentAttendance2526") # name of workbook
-G_sheet_data = G_workbook.worksheet("Cumulative") # name of worksheet with cumulative data
-G_sheet_checklist = G_workbook.worksheet("Checklist") # name of worksheet with checklist items
+G_workbook = client.open("StudentAttendance2526")  # name of workbook
+G_sheet_data = G_workbook.worksheet(
+    "Cumulative"
+)  # name of worksheet with cumulative data
+G_sheet_checklist = G_workbook.worksheet(
+    "Checklist"
+)  # name of worksheet with checklist items
 
 
 def refresh_data(_lock=multiprocessing.Lock()):
@@ -28,6 +33,7 @@ def refresh_data(_lock=multiprocessing.Lock()):
         for member in data:
             member["HBID"] = str(member["HBID"])
         return data
+
 
 def refresh_checklist(_lock=multiprocessing.Lock()):
     with _lock:
@@ -42,31 +48,31 @@ G_data = refresh_data()
 G_checklist = refresh_checklist()
 
 
-@app.route('/refresh', methods=['POST'])
+@app.route("/refresh", methods=["POST"])
 def refresh():
     global G_data, G_checklist
     G_data = refresh_data()
     G_checklist = refresh_checklist()
     refresh = len(G_data) + len(G_checklist)
-    return jsonify({'refreshed': refresh})
+    return jsonify({"refreshed": refresh})
 
 
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template('homepage.html.jinja')
+    return render_template("homepage.html.jinja")
 
 
-@app.route('/get_data', methods=['GET'])
+@app.route("/get_data", methods=["GET"])
 def get_data():
     try:
-        id_number = request.args.get('id')
+        id_number = request.args.get("id")
 
         if not id_number:
             error_msg = "No ID Provided"
-            return render_template('error.html.jinja', error_msg = error_msg)
+            return render_template("error.html.jinja", error_msg=error_msg)
         elif len(id_number) != 7:
             error_msg = "Invalid ID"
-            return render_template('error.html.jinja', error_msg = error_msg)
+            return render_template("error.html.jinja", error_msg=error_msg)
 
         user_found = False
         for member in G_data:
@@ -80,39 +86,42 @@ def get_data():
                     checklist = student_checklist(member)
                     break
             # TODO: dont show leadership JV
-            return render_template('display.html.jinja', data = data, checklist = checklist)
+            return render_template("display.html.jinja", data=data, checklist=checklist)
         else:
             error_msg = "HBID not found"
-            return render_template('error.html.jinja', error_msg = error_msg)
-    
+            return render_template("error.html.jinja", error_msg=error_msg)
+
     except Exception as e:
         error_msg = "Hanna is bad at writing code: " + e
-        return render_template('error.html.jinja', error_msg = error_msg)
+        return render_template("error.html.jinja", error_msg=error_msg)
 
-# may be irrelevant if we just reboot the app every day at 3am   
+
+# may be irrelevant if we just reboot the app every day at 3am
 def load_data():
     # Open your Google Sheet by title
-    G_workbook = client.open("StudentAttendance2526") # name of workbook
-    G_sheet_data = G_workbook.worksheet("Cumulative") # name of worksheet
+    G_workbook = client.open("StudentAttendance2526")  # name of workbook
+    G_sheet_data = G_workbook.worksheet("Cumulative")  # name of worksheet
     G_data = G_sheet_data.get_all_records()
 
     # fix up to string
     for member in G_data:
         member["HBID"] = str(member["HBID"])
-        
+
     return G_data
+
 
 def load_checklist():
     # Open your Google Sheet by title
-    G_workbook = client.open("StudentAttendance2526") # name of workbook
-    G_sheet_checklist = G_workbook.worksheet("Checklist") # name of worksheet
+    G_workbook = client.open("StudentAttendance2526")  # name of workbook
+    G_sheet_checklist = G_workbook.worksheet("Checklist")  # name of worksheet
     G_checklist = G_sheet_checklist.get_all_records()
 
     # fix up to string
     for member in G_checklist:
         member["HBID"] = str(member["HBID"])
-        
+
     return G_checklist
+
 
 def student_data(member):
     # general requirements
@@ -122,8 +131,8 @@ def student_data(member):
     biz_target = 3
 
     # 8 week build season
-    jv_build = 24 # 8x3
-    v_build = 72 # 8x9
+    jv_build = 24  # 8x3
+    v_build = 72  # 8x9
 
     # honors - blanket across the board, so could live somewhere else. or here
     biz_honors = 6
@@ -131,7 +140,7 @@ def student_data(member):
     tech_honors = 250
 
     # team meeting count - blanket across the board, so could live somehwere else. or here
-    team_meeting = 8 #8x1
+    team_meeting = 8  # 8x1
 
     name = member["Name"]
 
@@ -139,7 +148,7 @@ def student_data(member):
         outreach_target = 10
 
     if member["Leadership"] == "TRUE":
-        v_build = 96 # 8x12
+        v_build = 96  # 8x12
         tech_target = 175
 
     pre_hrs = member["Pre-Season"]
@@ -156,8 +165,8 @@ def student_data(member):
         outreach_ec = True
 
     data = {
-        "name": name, 
-        "outreach_target": outreach_target, 
+        "name": name,
+        "outreach_target": outreach_target,
         "tech_target": tech_target,
         "biz_target": biz_target,
         "pre_target": pre_target,
@@ -174,6 +183,7 @@ def student_data(member):
         "meet_attendance": meet_attendance,
     }
     return data
+
 
 def student_checklist(member):
     try:
@@ -194,8 +204,8 @@ def student_checklist(member):
         return checklist
     except Exception as e:
         print("Error loading checklist: " + str(e))
-        return {"oops"}
-     
+        return {}
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0")
