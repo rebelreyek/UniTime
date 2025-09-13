@@ -44,7 +44,7 @@ build:
 deploy: build
 	# TODO: Install awscli, lightsailctl in venv
 	aws lightsail push-container-image  --service-name student-app --label student-app --image student-app:latest
-	aws lightsail create-container-service-deployment --no-cli-pager --cli-input-json "$(<lightsail.json)"
+	aws lightsail create-container-service-deployment --no-cli-pager --cli-input-json "$(lightsail.json)"
 
 .PHONY: run
 run: $(VENV)

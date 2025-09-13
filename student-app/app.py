@@ -75,7 +75,10 @@ def get_data():
                 break
         if user_found:
             data = student_data(member)
-            checklist = student_checklist(member)
+            for member in G_checklist:
+                if member["HBID"] == id_number:
+                    checklist = student_checklist(member)
+                    break
             # TODO: dont show leadership JV
             return render_template('display.html.jinja', data = data, checklist = checklist)
         else:
@@ -175,23 +178,23 @@ def student_data(member):
 def student_checklist(member):
     try:
         FIRST = member["FIRST"]
-        contract = member["Contract"]
-        onboard = member["Onboarding"]
+        SC = member["SC"]
+        PC = member["PC"]
         bison = member["695"]
+        battery = member["Battery"]
 
         checklist = {
-            "FIRST": FIRST,
-            "contract": contract,
-            "onboard": onboard,
-            "bison": bison,
+            "FIRST Online Registration": FIRST,
+            "2399 Student Contract": SC,
+            "2399 Parent Contract": PC,
+            "695 Liability Waiver": bison,
+            "Battery Safety Training": battery,
         }
-
-        checklist = {k: v == "TRUE" for k, v in checklist.items()}
 
         return checklist
     except Exception as e:
         print("Error loading checklist: " + str(e))
-        return {}
+        return {"oops"}
      
 
 if __name__ == '__main__':
