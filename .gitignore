@@ -4,6 +4,7 @@ G_team.json
 roster.json
 dates.json
 # exception to the rule
+/student-app/secrets.py
 /timeclock24/logs/*
 !/timeclock24/logs/.gitkeep
 .venv

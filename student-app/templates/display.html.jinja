@@ -12,12 +12,12 @@
   </ul>
 </div>
 <div id="student-checklist">
-  {{ unitime_list(checklist)}}
+  {{ unitime_list(label="Student Checklist", data=checklist, col1="Form", col2="Completed", col3="Resource") }}
 </div>
 <div class="is-hidden" id="jv-progress">
   {{ unitime_progress("jv-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
   {{ unitime_progress("jv-build", "Build Season (January-February)", data.build_hrs, data.jv_build) }}
-  {{ unitime_progress("meet_attendance", "Team Meeting Attendance (Saturdays 4-5pm)", data.meet_attendance, 8) }}
+  {{ unitime_list(label="Team Meeting Attendance (Saturdays, 4-5pm)", data=meetings, col1="Date", col2="Attendance", col3="Quiz Link") }}
 </div>
 <div class="is-hidden" id="varsity">
   {{ unitime_progress("varsity-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
@@ -86,12 +86,13 @@
   </div>
 {%  endmacro %}
 
-{% macro unitime_list(checklist) %}
+{% macro unitime_list(label, data, col1, col2, col3) %}
 <table class="table is-bordered is-striped">
   <thead>
     <tr>
-      <th>Form</th>
-      <th>Completed</th>
+      <th>{{col1}}</th>
+      <th>{{col2}}</th>
+      <th>{{col3}}</th>
     </tr>
   </thead>
   {% for item, checked in checklist.items() %}
@@ -100,6 +101,7 @@
       <td>
          {% if checked %}✅{% else %}❌{% endif %}
       </td>
+      <td>{"Test"}</td>
     </tr>
   {% endfor %}
 </table>

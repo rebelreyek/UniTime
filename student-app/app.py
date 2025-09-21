@@ -5,6 +5,8 @@ import gspread
 from flask import Flask, jsonify, render_template, request
 from oauth2client.service_account import ServiceAccountCredentials
 
+import secrets
+
 app = Flask(__name__)
 secretpath = Path(__file__).parent.parent / "timeclock24/2399_secret.json"
 
@@ -25,37 +27,25 @@ G_sheet_checklist = G_workbook.worksheet(
     "Checklist"
 )  # name of worksheet with checklist items
 
-
-def refresh_data(_lock=multiprocessing.Lock()):
+def refresh_sheet(sheet, _lock=multiprocessing.Lock()):
     with _lock:
-        data = G_sheet_data.get_all_records()
+        data = sheet.get_all_records()
         # fix up to string
         for member in data:
             member["HBID"] = str(member["HBID"])
         return data
 
-
-def refresh_checklist(_lock=multiprocessing.Lock()):
-    with _lock:
-        checklist = G_sheet_checklist.get_all_records()
-        # fix up to string
-        for member in checklist:
-            member["HBID"] = str(member["HBID"])
-        return checklist
-
-
-G_data = refresh_data()
-G_checklist = refresh_checklist()
+G_data = refresh_sheet(G_sheet_data)
+G_checklist = refresh_sheet(G_sheet_checklist)
 
 
 @app.route("/refresh", methods=["POST"])
 def refresh():
     global G_data, G_checklist
-    G_data = refresh_data()
-    G_checklist = refresh_checklist()
-    refresh = len(G_data) + len(G_checklist)
+    G_data = refresh_sheet(G_sheet_data)
+    G_checklist = refresh_sheet(G_sheet_checklist)
+    refresh = len(G_data)
     return jsonify({"refreshed": refresh})
-
 
 @app.route("/")
 def home():
@@ -94,34 +84,6 @@ def get_data():
     except Exception as e:
         error_msg = "Hanna is bad at writing code: " + e
         return render_template("error.html.jinja", error_msg=error_msg)
-
-
-# may be irrelevant if we just reboot the app every day at 3am
-def load_data():
-    # Open your Google Sheet by title
-    G_workbook = client.open("StudentAttendance2526")  # name of workbook
-    G_sheet_data = G_workbook.worksheet("Cumulative")  # name of worksheet
-    G_data = G_sheet_data.get_all_records()
-
-    # fix up to string
-    for member in G_data:
-        member["HBID"] = str(member["HBID"])
-
-    return G_data
-
-
-def load_checklist():
-    # Open your Google Sheet by title
-    G_workbook = client.open("StudentAttendance2526")  # name of workbook
-    G_sheet_checklist = G_workbook.worksheet("Checklist")  # name of worksheet
-    G_checklist = G_sheet_checklist.get_all_records()
-
-    # fix up to string
-    for member in G_checklist:
-        member["HBID"] = str(member["HBID"])
-
-    return G_checklist
-
 
 def student_data(member):
     # general requirements
@@ -192,18 +154,33 @@ def student_checklist(member):
         PC = member["PC"]
         bison = member["695"]
         battery = member["Battery"]
+        discord = member["Discord"]
 
         checklist = {
-            "FIRST Online Registration": FIRST,
-            "2399 Student Contract": SC,
-            "2399 Parent Contract": PC,
-            "695 Liability Waiver": bison,
-            "Battery Safety Training": battery,
+            "FIRST Online Registration": [FIRST, "Register for the team with FIRST", secrets.first_link],
+            "2399 Student Contract": [SC, "Read our handbook and the team contracts", secrets.contract_link],
+            "2399 Parent Contract": [PC, "Read our handbook and the team contracts", secrets.contract_link],
+            "Discord": [discord, "Join the team Discord", secrets.discord_link],
+            "Battery Safety Training": [battery, "Battery saftey training quiz", secrets.battery_quiz],
+            "695 Liability Waiver (Optional)": [bison, "", ""]
         }
+
+        for item in checklist:
+            if checklist[item] == "TRUE":
+                checklist[item] = True
+            else:
+                checklist[item] = False
 
         return checklist
     except Exception as e:
         print("Error loading checklist: " + str(e))
+        return {}
+    
+def student_meetings(member):
+    try:
+        pass
+    except Exception as e:
+        print("Error loading meetings: " + str(e))
         return {}
 
 
