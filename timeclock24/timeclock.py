@@ -119,7 +119,7 @@ if __name__ == "__main__":
         for date in G_dates:
             date = datetime.datetime.strptime(date, "%Y-%m-%d")
 
-    rows, cols = (8, 7)
+    rows, cols = (9, 7)
     arr = rows * [[0] * cols]
 
     G_main = Tk()
