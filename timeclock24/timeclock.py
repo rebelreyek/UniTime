@@ -137,7 +137,7 @@ if __name__ == "__main__":
     G_win.transient(G_main)
     G_win.overrideredirect(1)
 
-    for r in range(0, 8):
+    for r in range(0, 9):
         for c in range(0,7):
             mtxt = ""
             for member in G_roster:
