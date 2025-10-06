@@ -119,7 +119,7 @@ if __name__ == "__main__":
         for date in G_dates:
             date = datetime.datetime.strptime(date, "%Y-%m-%d")
 
-    rows, cols = (9, 7)
+    rows, cols = (9, 8)
     arr = rows * [[0] * cols]
 
     G_main = Tk()
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     G_win.overrideredirect(1)
 
     for r in range(0, 9):
-        for c in range(0,7):
+        for c in range(0, 8):
             mtxt = ""
             for member in G_roster:
                 if member["grow"] == r + 1 and member["gcol"] == c + 1:
@@ -154,7 +154,7 @@ if __name__ == "__main__":
             fg = fgcolor,
             bg = "lavenderblush",
             justify = "center",
-            width = 10,
+            width = 9,
             height = 2).grid(row = r, column = c, sticky = W, padx = 2, pady = 2)
 
     # main program loop
