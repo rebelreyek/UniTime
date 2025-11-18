@@ -12,7 +12,7 @@
   </ul>
 </div>
 <div id="student-checklist">
-  {{ unitime_list(label="Student Checklist", data=checklist, col1="Form", col2="Completed", col3="Resource") }}
+  {{ unitime_list(label="Student Checklist", data=checklist, col1="Form", col2="Completed", col3="Info") }}
 </div>
 <div class="is-hidden" id="jv-progress">
   {{ unitime_progress("jv-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
@@ -101,7 +101,7 @@
       <td>
          {% if checked %}✅{% else %}❌{% endif %}
       </td>
-      <td>{"Test"}</td>
+      <td>{{item[2]}}</td>
     </tr>
   {% endfor %}
 </table>

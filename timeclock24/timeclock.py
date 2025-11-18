@@ -119,7 +119,7 @@ if __name__ == "__main__":
         for date in G_dates:
             date = datetime.datetime.strptime(date, "%Y-%m-%d")
 
-    rows, cols = (9, 8)
+    rows, cols = (9, 7)
     arr = rows * [[0] * cols]
 
     G_main = Tk()
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     G_win.overrideredirect(1)
 
     for r in range(0, 9):
-        for c in range(0, 8):
+        for c in range(0, 7):
             mtxt = ""
             for member in G_roster:
                 if member["grow"] == r + 1 and member["gcol"] == c + 1:
