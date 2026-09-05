@@ -28,8 +28,20 @@ def disable_event():
 
 def reload_sheeet(sheetname, jsonfile):
     global G_sheet_data
+    global G_roster
+    global G_dates
 
     try: 
+        # capture current sign-in states so we can preserve them after reload
+        curr_status = {}
+        try:
+            if isinstance(G_roster, list):
+                for member in G_roster:
+                    if "HBID" in member and "ClockIn" in member:
+                        curr_status[str(member["HBID"])] = member["ClockIn"]
+        except Exception:
+            curr_status = {}
+
         # open workbook
         G_workbook = client.open("StudentAttendance2627")
 
@@ -40,9 +52,19 @@ def reload_sheeet(sheetname, jsonfile):
         G_sheet = {}
 
         if sheetname == "Roster":
+            G_sheet = G_sheet_data.get_all_records()
             for member in G_sheet:
                 if "HBID" in member:
                     member["HBID"] = str(member["HBID"])
+                    # restore ClockIn if present in old roster
+                    hb = member["HBID"]
+                    if hb in curr_status:
+                        try:
+                            member["ClockIn"] = curr_status[hb]
+                        except Exception:
+                            pass
+            # update in-memory roster so display_refresh sees changes
+            G_roster = G_sheet
 
         elif sheetname == "Dates":
             G_sheet = G_sheet_dates.col_values(1)
@@ -51,6 +73,7 @@ def reload_sheeet(sheetname, jsonfile):
             
             for date in G_sheet:
                 date = datetime.datetime.strptime(date, "%Y-%m-%d")
+            G_dates = G_sheet
 
         # remove existing file so consumers reload cleanly
         try:
@@ -109,7 +132,9 @@ def keydown(e):
         key_queue.put('5')
     if (e.char == '!'):
         reload_sheeet("Dates", "dates.json")
-        print("Reloaded dates from google.")
+        reload_sheeet("Roster", "roster.json")
+        display_refresh()
+        print("Reloaded data from google.")
     
 
 def checkdate(dates):
