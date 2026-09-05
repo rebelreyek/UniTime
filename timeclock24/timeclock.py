@@ -26,9 +26,73 @@ from tkinter import ttk
 def disable_event():
     pass
 
+def reload_sheeet(sheetname, jsonfile):
+    global G_sheet_data
+
+    try: 
+        # open workbook
+        G_workbook = client.open("StudentAttendance2627")
+
+        # get workbook tab
+        G_sheet_data = G_workbook.worksheet(sheetname)
+
+        # memory structure
+        G_sheet = {}
+
+        if sheetname == "Roster":
+            for member in G_sheet:
+                if "HBID" in member:
+                    member["HBID"] = str(member["HBID"])
+
+        elif sheetname == "Dates":
+            G_sheet = G_sheet_dates.col_values(1)
+            
+            G_sheet = G_sheet[1:] # skip header row
+            
+            for date in G_sheet:
+                date = datetime.datetime.strptime(date, "%Y-%m-%d")
+
+        # remove existing file so consumers reload cleanly
+        try:
+            if os.path.exists(jsonfile):
+                os.remove(jsonfile)
+        except Exception:
+            pass
+
+        # write the freshly fetched sheet data to the jsonfile
+        f = open(jsonfile, "w")
+        f.write(json.dumps(G_sheet, indent=4))
+        f.close()
+    except:
+        print("Failed to reload " + sheetname + " from google.")
+
+def display_refresh():
+    global G_win
+    global G_roster
+
+    for child in G_win.winfo_children():
+        if type(child) != Label:
+            continue
+
+        r = child.grid_info()['row'] + 1
+        c = child.grid_info()['column'] + 1
+
+        mtxt = ""
+        fgcolor = "lightgrey"
+        for member in G_roster:
+            if member["grow"] == r and member["gcol"] == c:
+                mtxt = member["StudentFirst"]
+                if "ClockIn" in member:
+                    fgcolor = "mediumvioletred"
+                else:
+                    fgcolor = "lightgrey"
+
+        child.config(text=mtxt, fg=fgcolor)
+
 # tkinter keypress event (the barcode reader functions as a keyboard) - only allow digits for the user id's
 def keydown(e):
 #    global G_win_mode
+    global G_roster
     keys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     for k in keys:
         if (e.char == k):
@@ -43,6 +107,10 @@ def keydown(e):
         key_queue.put('6')
         key_queue.put('9')
         key_queue.put('5')
+    if (e.char == '!'):
+        reload_sheeet("Dates", "dates.json")
+        print("Reloaded dates from google.")
+    
 
 def checkdate(dates):
     log_name = "logs/{d.year}{d.month:02}{d.day:02}".format(d=datetime.datetime.now())
@@ -78,7 +146,7 @@ if __name__ == "__main__":
     client = gspread.authorize(creds)
 
     # open workbook
-    G_workbook = client.open("StudentAttendance2526")
+    G_workbook = client.open("StudentAttendance2627")
 
     # get workbook tabs
     G_sheet_data = G_workbook.worksheet("Roster")
