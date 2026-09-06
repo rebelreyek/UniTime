@@ -1,27 +1,22 @@
 # imports needed to make web requests
-import requests
-import urllib
+import datetime
 import json
-import re
 import math
+
+# imports needed for system functions
+import os
+import queue
+import time
+from pathlib import Path
+
+# imports for UI
+from tkinter import *
+from tkinter import simpledialog
 
 # imports needed for google docs
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# imports needed for system functions
-import os
-import time
-import sys
-import locale
-import threading
-import queue
-import datetime
-from pathlib import Path
-
-# imports for UI
-from tkinter import *
-from tkinter import ttk
 
 def disable_event():
     pass
@@ -86,7 +81,7 @@ def reload_sheeet(sheetname, jsonfile):
         f = open(jsonfile, "w")
         f.write(json.dumps(G_sheet, indent=4))
         f.close()
-    except:
+    except Exception:
         print("Failed to reload " + sheetname + " from google.")
 
 def display_refresh():
@@ -112,6 +107,136 @@ def display_refresh():
 
         child.config(text=mtxt, fg=fgcolor)
 
+
+def next_grid(roster):
+    if not roster:
+        return 1, 1
+
+    last_member = roster[-1]
+    if "grow" not in last_member or "gcol" not in last_member:
+        return 1, 1
+
+    row = int(last_member["grow"])
+    col = int(last_member["gcol"])
+
+    if col < 7:
+        return row, col + 1
+
+    if row >= 9:
+        return None
+
+    return row + 1, 1
+
+def prompt_new_student(user_id):
+    global G_main
+
+    first = simpledialog.askstring("New Student", "StudentFirst:", parent=G_main)
+    if first is None:
+        return None
+    first = first.strip()
+
+    last = simpledialog.askstring("New Student", "StudentLast:", parent=G_main)
+    if last is None:
+        return None
+    last = last.strip()
+
+    email = simpledialog.askstring("New Student", "StudentEmail:", parent=G_main)
+    if email is None:
+        return None
+    email = email.strip()
+
+    if not first or not last or not email:
+        return None
+
+    return {
+        "HBID": str(user_id),
+        "StudentFirst": first,
+        "StudentLast": last,
+        "StudentEmail": email,
+    }
+
+
+def append_new_student_to_roster(member):
+    global G_roster
+    global G_sheet_data
+
+    if not isinstance(G_roster, list):
+        G_roster = []
+
+    slot = next_grid(G_roster)
+    if slot is None:
+        return False
+
+    row, col = slot
+
+    member["grow"] = row
+    member["gcol"] = col
+    member["HBID"] = str(member["HBID"])
+    member["Leadership"] = "FALSE"
+    member["Rookie"] = "FALSE"
+    member["StudentCell"] = ""
+    member["DOB"] = ""
+    member["Grade"] = ""
+    member["ParentName1"] = ""
+    member["ParentCell1"] = ""
+    member["ParentEmail1"] = ""
+    member["ParentName2"] = ""
+    member["ParentCell2"] = ""
+    member["ParentEmail2"] = ""
+    member["ParentName3"] = ""
+    member["ParentCell3"] = ""
+    member["ParentEmail3"] = ""
+    member["ParentName4"] = ""
+    member["ParentCell4"] = ""
+    member["ParentEmail4"] = ""
+    member["Varsity?"] = ""
+
+    try:
+        headers = G_sheet_data.row_values(1)
+    except Exception:
+        headers = [
+            "HBID",
+            "StudentEmail",
+            "StudentLast",
+            "StudentFirst",
+            "Leadership",
+            "Rookie",
+            "grow",
+            "gcol",
+            "StudentCell",
+            "DOB",
+            "Grade",
+            "ParentName1",
+            "ParentCell1",
+            "ParentEmail1",
+            "ParentName2",
+            "ParentCell2",
+            "ParentEmail2",
+            "ParentName3",
+            "ParentCell3",
+            "ParentEmail3",
+            "ParentName4",
+            "ParentCell4",
+            "ParentEmail4",
+            "Varsity?",
+        ]
+
+    row_values = []
+    for header in headers:
+        value = member.get(header, "")
+        if value is None:
+            value = ""
+        row_values.append(value)
+
+    G_sheet_data.append_row(row_values, value_input_option="USER_ENTERED")
+    G_roster.append(member)
+
+    f = open("roster.json", "w")
+    f.write(json.dumps(G_roster, indent=4))
+    f.close()
+
+    return True
+
 # tkinter keypress event (the barcode reader functions as a keyboard) - only allow digits for the user id's
 def keydown(e):
 #    global G_win_mode
@@ -135,6 +260,14 @@ def keydown(e):
         reload_sheeet("Roster", "roster.json")
         display_refresh()
         print("Reloaded data from google.")
+    if (e.char == '@'):
+        key_queue.put('9')
+        key_queue.put('9')
+        key_queue.put('9')
+        key_queue.put('9')
+        key_queue.put('6')
+        key_queue.put('9')
+        key_queue.put('5')
     
 
 def checkdate(dates):
@@ -363,3 +496,15 @@ if __name__ == "__main__":
                     f = open("roster.json", "w")
                     f.write(json.dumps(G_roster, indent=4))
                     f.close()
+        else:
+            newbie = prompt_new_student(user_id)
+            if newbie is not None:
+                try:
+                    if append_new_student_to_roster(newbie):
+                        reload_sheeet("Roster", "roster.json")
+                        display_refresh()
+                        print("ADDED NEW STUDENT: " + newbie["StudentFirst"] + " " + newbie["StudentLast"] + " (" + user_id + ")")
+                except Exception as exc:
+                    print("Failed to add unknown student to roster: " + str(exc))
+            else:
+                print("Unknown barcode ignored: " + user_id)
