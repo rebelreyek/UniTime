@@ -239,7 +239,6 @@ def append_new_student_to_roster(member):
 
 # tkinter keypress event (the barcode reader functions as a keyboard) - only allow digits for the user id's
 def keydown(e):
-#    global G_win_mode
     global G_roster
     keys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     for k in keys:
@@ -260,14 +259,6 @@ def keydown(e):
         reload_sheeet("Roster", "roster.json")
         display_refresh()
         print("Reloaded data from google.")
-    if (e.char == '@'):
-        key_queue.put('9')
-        key_queue.put('9')
-        key_queue.put('9')
-        key_queue.put('9')
-        key_queue.put('6')
-        key_queue.put('9')
-        key_queue.put('5')
     
 
 def checkdate(dates):
