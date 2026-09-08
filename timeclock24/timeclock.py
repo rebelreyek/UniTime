@@ -272,8 +272,20 @@ def checkdate(dates):
 
     return log_name
 
+def checkdate(dates):
+    log_name = "logs/{d.year}{d.month:02}{d.day:02}".format(d=datetime.datetime.now())
+    today = datetime.datetime.now().strftime('%Y-%m-%d')
+    for date in dates:
+        if date == today:
+            log_name = log_name + "A"
+            break
+    log_name = log_name + ".log"
+
+    return log_name
+
 if __name__ == "__main__":
 
+    mypath = Path(__file__).parent.as_posix()
     mypath = Path(__file__).parent.as_posix()
 
     if os.environ.get('DISPLAY','') == '':
@@ -292,6 +304,7 @@ if __name__ == "__main__":
     # set our credentials to access google docs
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
     creds = ServiceAccountCredentials.from_json_keyfile_name(mypath + '/2399_secret.json', scope)
+    creds = ServiceAccountCredentials.from_json_keyfile_name(mypath + '/2399_secret.json', scope)
     client = gspread.authorize(creds)
 
     # open workbook
@@ -300,9 +313,13 @@ if __name__ == "__main__":
     # get workbook tabs
     G_sheet_data = G_workbook.worksheet("Roster")
     G_sheet_dates = G_workbook.worksheet("Dates")
+    G_sheet_data = G_workbook.worksheet("Roster")
+    G_sheet_dates = G_workbook.worksheet("Dates")
 
     # memory structure
+    # memory structure
     G_roster = {}
+    G_dates = {}
     G_dates = {}
 
     # try loading from local json
@@ -313,6 +330,7 @@ if __name__ == "__main__":
         print("Roster loaded from local file roster.json.  Delete to load from google.")
     except:
         G_roster = G_sheet_data.get_all_records()
+        G_roster = G_sheet_data.get_all_records()
         print("Local file roster.json not found.  Roster loaded from google.")
 
         # fixup numerics to strings for later comparisons
@@ -321,6 +339,22 @@ if __name__ == "__main__":
         #     member["StudentCell"] = str(member["StudentCell"])
         #     member["ParentCell"] = str(member["ParentCell"])
 
+    # load special dates from local json
+    try:
+        f = open("dates.json", "r")
+        G_dates = json.load(f)
+        f.close()
+        print("Special dates loaded from local file dates.json.")
+    except:
+        G_dates = G_sheet_dates.col_values(1)
+        print("Local file dates.json not found.  Dates loaded from google.")
+
+        G_dates = G_dates[1:] # skip header row
+
+        for date in G_dates:
+            date = datetime.datetime.strptime(date, "%Y-%m-%d")
+
+    rows, cols = (9, 7)
     # load special dates from local json
     try:
         f = open("dates.json", "r")
@@ -356,6 +390,8 @@ if __name__ == "__main__":
 
     for r in range(0, 9):
         for c in range(0, 7):
+    for r in range(0, 9):
+        for c in range(0, 7):
             mtxt = ""
             for member in G_roster:
                 if member["grow"] == r + 1 and member["gcol"] == c + 1:
@@ -371,6 +407,7 @@ if __name__ == "__main__":
             fg = fgcolor,
             bg = "lavenderblush",
             justify = "center",
+            width = 9,
             width = 9,
             height = 2).grid(row = r, column = c, sticky = W, padx = 2, pady = 2)
 
@@ -436,6 +473,7 @@ if __name__ == "__main__":
                 user_id = user_id + key_queue.get()
 
         # user id must be 7 digits, so just loop if nothing to look up yet
+        # user id must be 7 digits, so just loop if nothing to look up yet
         if len(user_id) != 7:
             continue
 
@@ -476,7 +514,9 @@ if __name__ == "__main__":
                         if delta <= 5 or delta > 720:
                             delta = 0
                         logname = checkdate(G_dates)
+                        logname = checkdate(G_dates)
                         l = G_member["HBID"] + "\t" + G_member["StudentFirst"] + "\t" + G_member["ClockIn"] + "\t" + G_member["ClockOut"] + "\t" + str(delta) + "\r"
+                        f = open(logname, "a")
                         f = open(logname, "a")
                         f.write(l)
                         f.close()
