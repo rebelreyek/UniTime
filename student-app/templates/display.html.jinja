@@ -5,28 +5,23 @@
 {% block content %}
 <div class="tabs">
   <ul>
-    <li data-target="jv-progress" class="is-active"><a>Junior Varsity</a></li>
-    <li data-target="varsity-a"><a>Varsity (Track A)</a></li>
-    <li data-target="varsity-b"><a>Varsity (Track B)</a></li>
+    <li data-target="student-checklist" class="is-active"><a>Checklist</a></li>
+    <li data-target="jv-progress"><a>Junior Varsity</a></li>
+    <li data-target="varsity"><a>Varsity</a></li>
     <li data-target="honors-progress"><a>Honors</a></li>
   </ul>
 </div>
-<div id="jv-progress">
+<div id="student-checklist">
+  {{ unitime_list(label="Student Checklist", data=checklist, col1="Form", col2="Completed", col3="Info") }}
+</div>
+<div class="is-hidden" id="jv-progress">
   {{ unitime_progress("jv-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
   {{ unitime_progress("jv-build", "Build Season (January-February)", data.build_hrs, data.jv_build) }}
-  {{ unitime_progress("meet_attendance", "Team Meeting Attendance (Saturdays 4-5pm)", data.meet_attendance, 8) }}
+  {{ unitime_list(label="Team Meeting Attendance (Saturdays, 4-5pm)", data=meetings, col1="Date", col2="Attendance", col3="Quiz Link") }}
 </div>
-<div class="is-hidden" id="varsity-a">
+<div class="is-hidden" id="varsity">
   {{ unitime_progress("varsity-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
-  {{ unitime_progress("varsity-build", "Build Season (January-February)", data.build_hrs, data.v_build) }}
-  {{ unitime_progress("meet_attendance", "Team Meeting Attendance (Saturdays 4-5pm)", data.meet_attendance, 8) }}
-  {{ unitime_progress("varsity-outreach", "Outreach Hours", data.outreach_hrs, data.outreach_target) }}
-  {{ unitime_progress("varsity-business", "Business Objectives", data.biz_obj, 3) }}
-  {{ unitime_progress("varsity-business-req", "Business Fundraising", data.biz_fund, 100) }}
-</div>
-<div class="is-hidden" id="varsity-b">
-  {{ unitime_progress("varsity-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
-  {{ unitime_progress("varsity-tech", "Total Tech Hours", data.tech_hrs, data.tech_target) }}
+  {{ unitime_progress("varsity-build", "Build Season (January-February) ", data.build_hrs, data.v_build) }}
   {{ unitime_progress("meet_attendance", "Team Meeting Attendance (Saturdays 4-5pm)", data.meet_attendance, 8) }}
   {{ unitime_progress("varsity-outreach", "Outreach Hours", data.outreach_hrs, data.outreach_target) }}
   {{ unitime_progress("varsity-business", "Business Objectives", data.biz_obj, 3) }}
@@ -37,6 +32,7 @@
   {{ unitime_progress("honors-outreach", "Outreach Hours", data.outreach_hrs, 35) }}
   {{ unitime_progress("honors-ec", "Outreach Event Coordinator", data.outreach_ec, 1) }}
   {{ unitime_progress("honors-business", "Business Objectives", data.biz_obj, 6) }}
+  {{ unitime_progress("honors-proof", "Business Proofreader", data.biz_proof, 4) }}
   {{ unitime_progress("varsity-business-req", "Business Fundraising", data.biz_fund, 100) }}
 </div>
 <script type="text/javascript">
@@ -89,3 +85,24 @@
     {{ value | float }} of {{ max | float}}
   </div>
 {%  endmacro %}
+
+{% macro unitime_list(label, data, col1, col2, col3) %}
+<table class="table is-bordered is-striped">
+  <thead>
+    <tr>
+      <th>{{col1}}</th>
+      <th>{{col2}}</th>
+      <th>{{col3}}</th>
+    </tr>
+  </thead>
+  {% for item, checked in checklist.items() %}
+    <tr>
+      <td>{{ item[] }}</td>
+      <td>
+         {% if checked %}✅{% else %}❌{% endif %}
+      </td>
+      <td>{{item[2]}}</td>
+    </tr>
+  {% endfor %}
+</table>
+{% endmacro %}

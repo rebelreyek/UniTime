@@ -1,89 +1,89 @@
 import multiprocessing
 from pathlib import Path
 
-
-from flask import Flask, request, jsonify, render_template
-import gspread, json
+import gspread
+from flask import Flask, jsonify, render_template, request
 from oauth2client.service_account import ServiceAccountCredentials
-from pathlib import Path
+
+import secrets
 
 app = Flask(__name__)
-secretpath = Path(__file__).parent.parent / 'timeclock24/2399_secret.json'
+secretpath = Path(__file__).parent.parent / "timeclock24/2399_secret.json"
 
 # Define the scope and credentials for Google Sheets API
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+scope = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive",
+]
 credentials = ServiceAccountCredentials.from_json_keyfile_name(secretpath, scope)
 client = gspread.authorize(credentials)
 
 
-G_workbook = client.open("StudentAttendance2425") # name of workbook
-G_sheet_roster = G_workbook.worksheet("Cumulative") # name of worksheet
+G_workbook = client.open("StudentAttendance2526")  # name of workbook
+G_sheet_data = G_workbook.worksheet(
+    "Cumulative"
+)  # name of worksheet with cumulative data
+G_sheet_checklist = G_workbook.worksheet(
+    "Checklist"
+)  # name of worksheet with checklist items
 
-
-def refresh_roster(_lock=multiprocessing.Lock()):
+def refresh_sheet(sheet, _lock=multiprocessing.Lock()):
     with _lock:
-        roster = G_sheet_roster.get_all_records()
+        data = sheet.get_all_records()
         # fix up to string
-        for member in roster:
+        for member in data:
             member["HBID"] = str(member["HBID"])
-        return roster
+        return data
+
+G_data = refresh_sheet(G_sheet_data)
+G_checklist = refresh_sheet(G_sheet_checklist)
 
 
-G_roster = refresh_roster()
-
-
-@app.route('/refresh', methods=['POST'])
+@app.route("/refresh", methods=["POST"])
 def refresh():
-    global G_roster
-    G_roster = refresh_roster()
-    return jsonify({'refreshed': len(G_roster)})
+    global G_data, G_checklist
+    G_data = refresh_sheet(G_sheet_data)
+    G_checklist = refresh_sheet(G_sheet_checklist)
+    refresh = len(G_data)
+    return jsonify({"refreshed": refresh})
 
-
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template('homepage.html.jinja')
+    return render_template("homepage.html.jinja")
 
 
-@app.route('/get_data', methods=['GET'])
+@app.route("/get_data", methods=["GET"])
 def get_data():
     try:
-        id_number = request.args.get('id')
+        id_number = request.args.get("id")
 
         if not id_number:
             error_msg = "No ID Provided"
-            return render_template('error.html.jinja', error_msg = error_msg)
+            return render_template("error.html.jinja", error_msg=error_msg)
         elif len(id_number) != 7:
             error_msg = "Invalid ID"
-            return render_template('error.html.jinja', error_msg = error_msg)
+            return render_template("error.html.jinja", error_msg=error_msg)
 
         user_found = False
-        for member in G_roster:
+        for member in G_data:
             if member["HBID"] == id_number:
                 user_found = True
                 break
         if user_found:
             data = student_data(member)
-            return render_template('display.html.jinja', data = data)
+            for member in G_checklist:
+                if member["HBID"] == id_number:
+                    checklist = student_checklist(member)
+                    break
+            # TODO: dont show leadership JV
+            return render_template("display.html.jinja", data=data, checklist=checklist)
         else:
             error_msg = "HBID not found"
-            return render_template('error.html.jinja', error_msg = error_msg)
-    
+            return render_template("error.html.jinja", error_msg=error_msg)
+
     except Exception as e:
         error_msg = "Hanna is bad at writing code: " + e
-        return render_template('error.html.jinja', error_msg = error_msg)
-
-# may be irrelevant if we just reboot the app every day at 3am   
-def load_roster():
-    # Open your Google Sheet by title
-    G_workbook = client.open("StudentAttendance2425") # name of workbook
-    G_sheet_roster = G_workbook.worksheet("Cumulative") # name of worksheet
-    G_roster = G_sheet_roster.get_all_records()
-
-    # fix up to string
-    for member in G_roster:
-        member["HBID"] = str(member["HBID"])
-        
-    return G_roster
+        return render_template("error.html.jinja", error_msg=error_msg)
 
 def student_data(member):
     # general requirements
@@ -93,8 +93,8 @@ def student_data(member):
     biz_target = 3
 
     # 8 week build season
-    jv_build = 24 # 8x3
-    v_build = 72 # 8x9
+    jv_build = 24  # 8x3
+    v_build = 72  # 8x9
 
     # honors - blanket across the board, so could live somewhere else. or here
     biz_honors = 6
@@ -102,7 +102,7 @@ def student_data(member):
     tech_honors = 250
 
     # team meeting count - blanket across the board, so could live somehwere else. or here
-    team_meeting = 8 #8x1
+    team_meeting = 8  # 8x1
 
     name = member["Name"]
 
@@ -110,17 +110,15 @@ def student_data(member):
         outreach_target = 10
 
     if member["Leadership"] == "TRUE":
-        v_build = 96 # 8x12
+        v_build = 96  # 8x12
         tech_target = 175
-        if member["HBID"] == "7071199": # captain (CH) ID
-            v_build = 120 # 8x15
-            tech_target = 200 # this is not in the handbook (oops)
 
     pre_hrs = member["Pre-Season"]
     build_hrs = member["Build Season"]
     tech_hrs = member["Total Tech Hours"]
     outreach_hrs = member["Outreach"]
     business_obj = member["Business"]
+    business_proof = member["Proofread"]
     business_fundraising = member["Value"]
     outreach_ec = False
     meet_attendance = member["Team Meetings"]
@@ -128,24 +126,63 @@ def student_data(member):
     if member["Outreach EC"] == "TRUE":
         outreach_ec = True
 
-    data = {"name": name, 
-            "outreach_target": outreach_target, 
-            "tech_target": tech_target,
-            "biz_target": biz_target,
-            "pre_target": pre_target,
-            "jv_build": jv_build,
-            "v_build": v_build,
-            "pre_hrs": pre_hrs,
-            "build_hrs": build_hrs,
-            "tech_hrs": tech_hrs,
-            "outreach_hrs": outreach_hrs,
-            "biz_obj": business_obj,
-            "biz_fund": business_fundraising,
-            "outreach_ec": outreach_ec,
-            "meet_attendance": meet_attendance,
+    data = {
+        "name": name,
+        "outreach_target": outreach_target,
+        "tech_target": tech_target,
+        "biz_target": biz_target,
+        "pre_target": pre_target,
+        "jv_build": jv_build,
+        "v_build": v_build,
+        "pre_hrs": pre_hrs,
+        "build_hrs": build_hrs,
+        "tech_hrs": tech_hrs,
+        "outreach_hrs": outreach_hrs,
+        "biz_obj": business_obj,
+        "biz_fund": business_fundraising,
+        "biz_proof": business_proof,
+        "outreach_ec": outreach_ec,
+        "meet_attendance": meet_attendance,
     }
     return data
-     
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+
+def student_checklist(member):
+    try:
+        FIRST = member["FIRST"]
+        SC = member["SC"]
+        PC = member["PC"]
+        bison = member["695"]
+        battery = member["Battery"]
+        discord = member["Discord"]
+
+        checklist = {
+            "FIRST Online Registration": [FIRST, "Register for the team with FIRST", secrets.first_link],
+            "2399 Student Contract": [SC, "Read our handbook and the team contracts", secrets.contract_link],
+            "2399 Parent Contract": [PC, "Read our handbook and the team contracts", secrets.contract_link],
+            "Discord": [discord, "Join the team Discord", secrets.discord_link],
+            "Battery Safety Training": [battery, "Battery saftey training quiz", secrets.battery_quiz],
+            "695 Liability Waiver (Optional)": [bison, "", ""]
+        }
+
+        for item in checklist:
+            if checklist[item] == "TRUE":
+                checklist[item] = True
+            else:
+                checklist[item] = False
+
+        return checklist
+    except Exception as e:
+        print("Error loading checklist: " + str(e))
+        return {}
+    
+def student_meetings(member):
+    try:
+        pass
+    except Exception as e:
+        print("Error loading meetings: " + str(e))
+        return {}
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0")

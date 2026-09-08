@@ -27,6 +27,8 @@ clean_venv: ensure_out_of_venv
 	$(VENV_PIP) install --upgrade pip wheel
 
 $(VENV_SENTINEL): requirements.txt
+	$(MAKE) clean_venv
+	$(VENV_PIP) install -r $^
 	touch $(VENV_SENTINEL)
 
 .PHONY: update_requirements
@@ -44,7 +46,7 @@ build:
 deploy: build
 	# TODO: Install awscli, lightsailctl in venv
 	aws lightsail push-container-image  --service-name student-app --label student-app --image student-app:latest
-	aws lightsail create-container-service-deployment --no-cli-pager --cli-input-json "$(<lightsail.json)"
+	aws lightsail create-container-service-deployment --no-cli-pager --cli-input-json "$$(<lightsail.json)"
 
 .PHONY: run
 run: $(VENV)
