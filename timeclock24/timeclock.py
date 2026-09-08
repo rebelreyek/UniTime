@@ -390,8 +390,6 @@ if __name__ == "__main__":
 
     for r in range(0, 9):
         for c in range(0, 7):
-    for r in range(0, 9):
-        for c in range(0, 7):
             mtxt = ""
             for member in G_roster:
                 if member["grow"] == r + 1 and member["gcol"] == c + 1:
@@ -407,7 +405,6 @@ if __name__ == "__main__":
             fg = fgcolor,
             bg = "lavenderblush",
             justify = "center",
-            width = 9,
             width = 9,
             height = 2).grid(row = r, column = c, sticky = W, padx = 2, pady = 2)
 
