@@ -237,6 +237,67 @@ def append_new_student_to_roster(member):
 
     return True
 
+
+def write_roster_file():
+    global G_roster
+    with open("roster.json", "w") as f:
+        f.write(json.dumps(G_roster, indent=4))
+
+
+def clock_out_member(member, now=None, batch=False):
+    global G_dates
+
+    if "ClockIn" not in member:
+        return False
+
+    if now is None:
+        now = datetime.datetime.now()
+
+    clock_in = member["ClockIn"]
+    clock_out = now.strftime(timeformat)
+    member["ClockOut"] = clock_out
+
+    delta = datetime.datetime.strptime(clock_out, timeformat) - datetime.datetime.strptime(clock_in, timeformat)
+    delta = delta.total_seconds() / 60.0
+    delta = int(math.ceil(delta / 5.0)) * 5
+
+    if delta <= 5 or delta > 720:
+        delta = 0
+
+    logname = checkdate(G_dates)
+    l = member["HBID"] + "\t" + member["StudentFirst"] + "\t" + clock_in + "\t" + clock_out + "\t" + str(delta) + "\r"
+    with open(logname, "a") as f:
+        f.write(l)
+
+    print(clock_out + " CLOCK OUT:  " + member["StudentFirst"] + (" (ALL)" if batch else ""))
+
+    del member["ClockIn"]
+    if "ClockOut" in member:
+        del member["ClockOut"]
+
+    write_roster_file()
+    return True
+
+
+def sign_everyone_out():
+    global G_roster
+
+    if not isinstance(G_roster, list):
+        return
+
+    for member in G_roster:
+        if "ClockIn" in member:
+            clock_out_member(member, now=datetime.datetime.now(), batch=True)
+
+    if hasattr(G_win, "winfo_children"):
+        for child in G_win.winfo_children():
+            if type(child) != Label:
+                continue
+            child['fg'] = "lightgrey"
+
+    display_refresh()
+
+
 # tkinter keypress event (the barcode reader functions as a keyboard) - only allow digits for the user id's
 def keydown(e):
     global G_roster
@@ -254,23 +315,15 @@ def keydown(e):
         key_queue.put('6')
         key_queue.put('9')
         key_queue.put('5')
+    if (e.char == '&'):
+        sign_everyone_out()
+        return
     if (e.char == '!'):
         reload_sheeet("Dates", "dates.json")
         reload_sheeet("Roster", "roster.json")
         display_refresh()
         print("Reloaded data from google.")
     
-
-def checkdate(dates):
-    log_name = "logs/{d.year}{d.month:02}{d.day:02}".format(d=datetime.datetime.now())
-    today = datetime.datetime.now().strftime('%Y-%m-%d')
-    for date in dates:
-        if date == today:
-            log_name = log_name + "A"
-            break
-    log_name = log_name + ".log"
-
-    return log_name
 
 def checkdate(dates):
     log_name = "logs/{d.year}{d.month:02}{d.day:02}".format(d=datetime.datetime.now())
@@ -499,31 +552,9 @@ if __name__ == "__main__":
                         child['fg'] = "mediumvioletred"
                         print(G_member["ClockIn"] + " CLOCK IN:  " + G_member["StudentFirst"])
                     else:
-                        # calculate total time spent at robotics
-                        G_member["ClockOut"] = datetime.datetime.now().strftime(timeformat)
-                        delta = datetime.datetime.strptime(G_member["ClockOut"], timeformat) - datetime.datetime.strptime(G_member["ClockIn"], timeformat)
-                        delta = delta.total_seconds() / 60.0
-
-                        # round to the upper 5 minutes
-                        delta = int(math.ceil(delta / 5.0)) * 5
-
-                        # write logs longer than 12hrs or shorter than 5min as 0
-                        if delta <= 5 or delta > 720:
-                            delta = 0
-                        logname = checkdate(G_dates)
-                        logname = checkdate(G_dates)
-                        l = G_member["HBID"] + "\t" + G_member["StudentFirst"] + "\t" + G_member["ClockIn"] + "\t" + G_member["ClockOut"] + "\t" + str(delta) + "\r"
-                        f = open(logname, "a")
-                        f = open(logname, "a")
-                        f.write(l)
-                        f.close()
+                        clock_out_member(G_member)
                         child['fg'] = "lightgrey"
-                        print(G_member["ClockOut"] + " CLOCK OUT: " + G_member["StudentFirst"])
-                        del G_member["ClockIn"]
-                        del G_member["ClockOut"]
-                    f = open("roster.json", "w")
-                    f.write(json.dumps(G_roster, indent=4))
-                    f.close()
+                    write_roster_file()
         else:
             newbie = prompt_new_student(user_id)
             if newbie is not None:
