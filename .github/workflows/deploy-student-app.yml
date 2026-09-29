@@ -25,6 +25,13 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Write Google service account secret
+        shell: bash
+        run: |
+          mkdir -p timeclock24
+          printf '%s' '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}' > timeclock24/2399_secret.json
+          chmod 600 timeclock24/2399_secret.json
+
       - name: Build Docker image
         run: docker build -t student-app:latest .
 
