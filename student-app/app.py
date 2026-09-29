@@ -1,3 +1,4 @@
+import importlib.util
 import multiprocessing
 from pathlib import Path
 
@@ -5,9 +6,23 @@ import gspread
 from flask import Flask, jsonify, render_template, request
 from oauth2client.service_account import ServiceAccountCredentials
 
-import secrets
 
-app = Flask(__name__)
+def load_local_secrets_module():
+    secrets_path = Path(__file__).resolve().with_name("secrets.py")
+    spec = importlib.util.spec_from_file_location("student_app_secrets", secrets_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load secrets module from {secrets_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+secrets = load_local_secrets_module()
+
+app = Flask(
+    __name__,
+    template_folder=str(Path(__file__).resolve().parent / "templates"),
+)
 
 
 def resolve_secret_path():
@@ -67,6 +82,48 @@ def refresh():
 @app.route("/")
 def home():
     return render_template("homepage.html.jinja")
+
+
+@app.route("/resources")
+def resources():
+    resource_links = [
+        {
+            "title": "Team Handbook",
+            "description": "Read the team handbook and key policies.",
+            "url": secrets.handbook_link,
+        },
+        {
+            "title": "Student/Parent Contracts",
+            "description": "Read the handbook and submit your student/parent contracts.",
+            "url": secrets.contract_link,
+        },
+        {
+            "title": "Team Registration",
+            "description": "Register for the team with FIRST.",
+            "url": secrets.first_link,
+        },
+        {
+            "title": "V3 Off-Season Registration",
+            "description": "Register for V3, held on October 18th.",
+            "url": secrets.v3_registration_link,
+        },
+        {
+            "title": "Pre-Season Attendance Sheet",
+            "description": "Please fill out your weekly Pre-Season Attendance.",
+            "url": secrets.preseason_attendance_link,
+        },
+        {
+            "title": "Discord",
+            "description": "Join the team Discord.",
+            "url": secrets.discord_link,
+        },
+    ]
+    return render_template("resources.html.jinja", resources=resource_links)
+
+
+@app.route("/calendar")
+def calendar():
+    return render_template("calendar.html.jinja")
 
 
 @app.route("/get_data", methods=["GET"])

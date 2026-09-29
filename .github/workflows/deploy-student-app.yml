@@ -40,6 +40,17 @@ jobs:
           printf '%s' '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}' > timeclock24/2399_secret.json
           chmod 600 timeclock24/2399_secret.json
 
+      - name: Write student app secrets file
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.STUDENT_APP_SECRETS_PY }}" ]; then
+            echo "Missing required secret: STUDENT_APP_SECRETS_PY"
+            exit 1
+          fi
+          mkdir -p student-app
+          printf '%s' '${{ secrets.STUDENT_APP_SECRETS_PY }}' > student-app/secrets.py
+          chmod 600 student-app/secrets.py
+
       - name: Build Docker image
         run: docker build -t student-app:latest .
 

@@ -13,15 +13,15 @@
 <div id="student-checklist" class="is-hidden">
   {{ unitime_list(label="Student Checklist", data=checklist, col1="Form", col2="Completed", col3="Info") }}
 </div>
-<div class="is-hidden" id="jv-progress">
+<div id="jv-progress">
   {{ unitime_progress("jv-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
   {{ unitime_progress("jv-build", "Build Season (January-February)", data.build_hrs, data.jv_build) }}
-  {{ unitime_list(label="Team Meeting Attendance (Saturdays, 4-5pm)", data=meetings, col1="Date", col2="Attendance", col3="Quiz Link") }}
+  {{ unitime_progress("jv-meet_attendance", "Team Meeting Attendance (Saturdays 5-6pm)", data.meet_attendance, 8) }}
 </div>
 <div class="is-hidden" id="varsity">
   {{ unitime_progress("varsity-pre", "Pre-Season (September-November)", data.pre_hrs, data.pre_target) }}
   {{ unitime_progress("varsity-build", "Build Season (January-February) ", data.build_hrs, data.v_build) }}
-  {{ unitime_progress("meet_attendance", "Team Meeting Attendance (Saturdays 4-5pm)", data.meet_attendance, 8) }}
+  {{ unitime_progress("meet_attendance", "Team Meeting Attendance (Saturdays 5-6pm)", data.meet_attendance, 8) }}
   {{ unitime_progress("varsity-outreach", "Outreach Hours", data.outreach_hrs, data.outreach_target) }}
   {{ unitime_progress("varsity-business", "Business Objectives", data.biz_obj, 3) }}
   {{ unitime_progress("varsity-business-req", "Business Fundraising", data.biz_fund, 100) }}
@@ -40,6 +40,19 @@
     // Get all "tab" elements
     const tabs = Array.from(document.querySelectorAll('.tabs > ul > li'))
     const allTargets = tabs.map(el => document.getElementById(el.dataset.target)).filter(Boolean)
+    const activeTab = document.querySelector('.tabs > ul > li.is-active')
+    const activeTarget = activeTab ? document.getElementById(activeTab.dataset.target) : null
+
+    // Ensure the initial active tab shows on first render
+    allTargets.forEach(el => {
+      if (el !== activeTarget) {
+        el.classList.add('is-hidden')
+      }
+    })
+    if (activeTarget) {
+      activeTarget.classList.remove('is-hidden')
+    }
+
     // Add a click event on each of them
     tabs.forEach( el => {
       el.addEventListener('click', () => {
