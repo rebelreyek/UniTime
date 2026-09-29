@@ -30,7 +30,7 @@ if __name__ == "__main__":
     client = gspread.authorize(creds)
 
     # open workbook
-    G_workbook = client.open("StudentAttendance2526")
+    G_workbook = client.open("StudentAttendance2627")
 
     # get workbook timelog tab
     preseason_timelog = G_workbook.worksheet("PreSeason")
