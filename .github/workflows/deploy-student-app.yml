@@ -1,0 +1,73 @@
+name: Deploy Student App to Lightsail
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Build Docker image
+        run: docker build -t student-app:latest .
+
+      - name: Push image to Lightsail container registry
+        env:
+          LIGHTSAIL_SERVICE_NAME: ${{ secrets.LIGHTSAIL_SERVICE_NAME }}
+        run: |
+          aws lightsail push-container-image \
+            --service-name "$LIGHTSAIL_SERVICE_NAME" \
+            --label student-app \
+            --image student-app:latest
+
+      - name: Deploy container service
+        env:
+          LIGHTSAIL_SERVICE_NAME: ${{ secrets.LIGHTSAIL_SERVICE_NAME }}
+        run: |
+          cat > deployment.json <<EOF
+          {
+            "serviceName": "${LIGHTSAIL_SERVICE_NAME}",
+            "containers": {
+              "student-app": {
+                "image": ":${LIGHTSAIL_SERVICE_NAME}.student-app.latest",
+                "command": [],
+                "environment": {},
+                "ports": {
+                  "5000": "HTTP"
+                }
+              }
+            },
+            "publicEndpoint": {
+              "containerName": "student-app",
+              "containerPort": 5000,
+              "healthCheck": {
+                "healthyThreshold": 2,
+                "unhealthyThreshold": 2,
+                "timeoutSeconds": 2,
+                "intervalSeconds": 5,
+                "path": "/",
+                "successCodes": "200-499"
+              }
+            }
+          }
+          EOF
+
+          aws lightsail create-container-service-deployment \
+            --cli-input-json file://deployment.json

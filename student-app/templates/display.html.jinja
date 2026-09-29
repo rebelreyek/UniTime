@@ -5,13 +5,12 @@
 {% block content %}
 <div class="tabs">
   <ul>
-    <li data-target="student-checklist" class="is-active"><a>Checklist</a></li>
-    <li data-target="jv-progress"><a>Junior Varsity</a></li>
+    <li data-target="jv-progress" class="is-active"><a>Junior Varsity</a></li>
     <li data-target="varsity"><a>Varsity</a></li>
     <li data-target="honors-progress"><a>Honors</a></li>
   </ul>
 </div>
-<div id="student-checklist">
+<div id="student-checklist" class="is-hidden">
   {{ unitime_list(label="Student Checklist", data=checklist, col1="Form", col2="Completed", col3="Info") }}
 </div>
 <div class="is-hidden" id="jv-progress">
@@ -40,7 +39,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     // Get all "tab" elements
     const tabs = Array.from(document.querySelectorAll('.tabs > ul > li'))
-    const allTargets = tabs.map(el => document.getElementById(el.dataset.target))
+    const allTargets = tabs.map(el => document.getElementById(el.dataset.target)).filter(Boolean)
     // Add a click event on each of them
     tabs.forEach( el => {
       el.addEventListener('click', () => {
@@ -53,7 +52,9 @@
         // Mark the clicked tab as active
         el.classList.add('is-active')
         // Show contents for selected tab
-        target.classList.remove('is-hidden')
+        if (target) {
+          target.classList.remove('is-hidden')
+        }
       });
     });
   });
