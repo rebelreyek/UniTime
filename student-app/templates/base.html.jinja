@@ -10,6 +10,14 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css"
     integrity="sha256-efrxyTTvKJ2Q1/BD8p9dZFtTEcil+cMzxZeL/7hdO2g=" crossorigin="anonymous">
   <style>
+    :root {
+      color-scheme: light dark;
+    }
+
+    body {
+      color-scheme: light dark;
+    }
+
     .roboto-regular {
       font-family: "Roboto", sans-serif;
       font-weight: 400;
@@ -19,8 +27,67 @@
     .montserrat {
       font-family: "Montserrat", sans-serif;
       font-optical-sizing: auto;
-      font-weight: 400;
+      font-weight: 600;
       font-style: normal;
+    }
+
+    body,
+    p,
+    li,
+    td,
+    th,
+    label,
+    input,
+    button,
+    a,
+    span {
+      font-weight: 500;
+    }
+
+    .box,
+    .resource-card,
+    .card {
+      background-color: white;
+      color: #0f172a;
+      border: 1px solid #dbdbdb;
+      border-radius: 0.75rem;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .box:hover,
+    .resource-card:hover,
+    .card:hover {
+      background-color: #f8f9fb;
+      border-color: #b5b5b5;
+    }
+
+    .box *,
+    .resource-card *,
+    .card * {
+      color: inherit;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .box,
+      .resource-card,
+      .card {
+        background-color: #1f1f1f;
+        color: #f5f5f5;
+        border-color: #3a3a3a;
+      }
+
+      .box:hover,
+      .resource-card:hover,
+      .card:hover {
+        background-color: #2b2b2b;
+        border-color: #4a4a4a;
+      }
+
+      .box *,
+      .resource-card *,
+      .card * {
+        color: #f5f5f5 !important;
+      }
     }
   </style>
 </head>
