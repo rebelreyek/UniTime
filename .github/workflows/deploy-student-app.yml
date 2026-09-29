@@ -17,6 +17,14 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Install Lightsailctl plugin
+        shell: bash
+        run: |
+          curl -sSL "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" -o /tmp/lightsailctl
+          chmod +x /tmp/lightsailctl
+          sudo mv /tmp/lightsailctl /usr/local/bin/lightsailctl
+          lightsailctl version
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
