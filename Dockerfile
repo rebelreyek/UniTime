@@ -9,7 +9,8 @@ WORKDIR /app
 
 # Copy the dependencies file to the working directory
 COPY requirements.txt .
-COPY ./timeclock24/2399_secret.json .
+RUN mkdir -p /app/timeclock24
+COPY ./timeclock24/2399_secret.json ./timeclock24/2399_secret.json
 
 # Install any dependencies
 RUN pip install -r requirements.txt

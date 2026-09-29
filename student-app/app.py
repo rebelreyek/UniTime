@@ -8,14 +8,31 @@ from oauth2client.service_account import ServiceAccountCredentials
 import secrets
 
 app = Flask(__name__)
-secretpath = Path(__file__).parent.parent / "timeclock24/2399_secret.json"
+
+
+def resolve_secret_path():
+    candidates = [
+        Path(__file__).resolve().parent.parent / "timeclock24" / "2399_secret.json",
+        Path(__file__).resolve().parent.parent / "2399_secret.json",
+        Path("/app/timeclock24/2399_secret.json"),
+        Path("/app/2399_secret.json"),
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
+
+
+secretpath = resolve_secret_path()
+if not secretpath.exists():
+    raise FileNotFoundError(f"Google service account file not found at {secretpath}")
 
 # Define the scope and credentials for Google Sheets API
 scope = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive",
 ]
-credentials = ServiceAccountCredentials.from_json_keyfile_name(secretpath, scope)
+credentials = ServiceAccountCredentials.from_json_keyfile_name(str(secretpath), scope)
 client = gspread.authorize(credentials)
 
 
